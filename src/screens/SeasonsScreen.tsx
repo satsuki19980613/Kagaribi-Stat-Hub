@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Back, Modal, PaneHead } from '../components/ui';
+import { Back, InfoButton, InfoList, Modal, PaneHead } from '../components/ui';
 import { daysInMonth, isoOf, parseIso, shortDate, weekdayOf } from '../domain/date';
 import type { AppData, SeasonOverride } from '../domain/model';
 import {
@@ -31,11 +31,16 @@ export function SeasonsScreen(props: {
   return (
     <div className="pane">
       <Back label="MENU" onClick={props.onBack} />
-      <PaneHead eyebrow="SEASONS" title="シーズン設定" />
-      <p className="hint">
-        シーズンは記録した日付の月から自動で決まります（S31 = 2026年10月、以降 1 か月ごとに +1）。
-        公式の日程が急に変わったとき（終了が 1 日早まる・休催日がある等）は、そのシーズンを開いて期間や開催日を直してください。
-      </p>
+      <PaneHead eyebrow="SEASONS" title="シーズン設定">
+        <InfoButton title="シーズン設定">
+          <InfoList
+            items={[
+              ['自動', 'シーズンは記録した日付の月から自動で決まります（S31 = 2026年10月、以降 1 か月ごとに +1）。開催日は火・木・土です。'],
+              ['手で直す', '公式の日程が急に変わったとき（終了が 1 日早まる・休催日があるなど）は、そのシーズンを開いて期間や開催日を直します。'],
+            ]}
+          />
+        </InfoButton>
+      </PaneHead>
       <ul className="recs">
         {list.map((no) => {
           const r = seasonRange(no, data.seasons);
@@ -113,6 +118,18 @@ function SeasonModal(props: { no: number; data: AppData; onSave: (o: SeasonOverr
       eyebrow="SEASON"
       title={`S${no} の期間と開催日`}
       onClose={props.onClose}
+      headActions={
+        <InfoButton title="期間と開催日">
+          <InfoList
+            items={[
+              ['期間', '始まりと終わりの日。ほかのシーズンと重ならないようにします。'],
+              ['開催日', 'カレンダーの日を押すと、開催日と休みが切り替わります。'],
+              ['使い道', '開催日は、得点推移の横軸と「開催 ○ 日」の数え方に使います。開催日以外の日にも記録はできます。'],
+              ['自動に戻す', '自動で決まる期間（火・木・土が開催日）に戻します。'],
+            ]}
+          />
+        </InfoButton>
+      }
       foot={
         <div className="btns">
           <button
@@ -212,7 +229,6 @@ function SeasonModal(props: { no: number; data: AppData; onSave: (o: SeasonOverr
       <p className="hint">
         <span className="cal-key on" /> 開催日　<span className="cal-key changed" /> 手動で変えた日　<span className="cal-key has" /> 記録のある日
       </p>
-      <p className="hint">開催日は X 軸（得点推移）と「開催 ○ 日」の数え方に使います。開催日以外の日にも記録はできます。</p>
     </Modal>
   );
 }

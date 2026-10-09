@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ConfirmDialog, Modal } from '../components/ui';
+import { ConfirmDialog, InfoButton, InfoList, Modal } from '../components/ui';
 import type { FileStatus } from '../data/autoBackup';
 import { listBackups } from '../data/store';
 import type { BackupEntry } from '../domain/autoBackup';
@@ -80,18 +80,24 @@ export function BackupModal(props: {
       <h3>
         <i className="gem" />
         自動バックアップ（この端末）
+        <InfoButton title="自動バックアップ（この端末）">
+          <p>記録・メンバー・シーズン設定を変えるたびに、全体のコピーを自動で残します。</p>
+          <InfoList
+            items={[
+              ['残る数', '直近 30 件と、それより前は 1 日 1 件を 60 日ぶん。内容が変わっていなければ残しません。'],
+              ['戻し方', '「この時点に戻す」を押します。間違えて消したときは、1 つ前の時点に戻せば取り消せます。戻す前の状態も履歴に残ります。'],
+              ['注意', 'ブラウザのデータを消すと一緒に消えます。ときどき「書き出す」でファイルにも保存してください。'],
+            ]}
+          />
+        </InfoButton>
         <span className="mtag" style={{ marginLeft: 'auto' }}>
           ON
         </span>
       </h3>
-      <p className="hint">
-        記録・メンバー・シーズン設定を変えるたびに、自動でコピーを残します（直近 30 件と、それより前は 1 日 1 件を 60 日ぶん）。
-        間違えて消したときは、1 つ前の時点に戻せば取り消せます。
-      </p>
       {history == null ? (
         <p className="hint">読み込み中…</p>
       ) : history.length === 0 ? (
-        <p className="hint">まだありません。データを変えると最初のコピーが残ります。</p>
+        <p className="hint">まだありません</p>
       ) : (
         <ul className="bk-list">
           {history.map((b, i) => (
@@ -115,6 +121,15 @@ export function BackupModal(props: {
       <h3>
         <i className="gem" />
         ファイルへ自動保存
+        <InfoButton title="ファイルへ自動保存">
+          <InfoList
+            items={[
+              ['使える所', 'PC の Chrome / Edge。スマホのブラウザでは使えません。'],
+              ['しくみ', '選んだ JSON ファイルへ、変更のたびに自動で書き出します。ブラウザのデータが消えても、このファイルを「読み込む」で戻せます。'],
+              ['開き直したとき', 'ブラウザを開き直したら、メニューに出る「再開」を 1 回押します（ブラウザの決まりで、書き込みの許可を出し直す必要があります）。'],
+            ]}
+          />
+        </InfoButton>
         {file.state === 'on' && (
           <span className="mtag" style={{ marginLeft: 'auto' }}>
             ON
@@ -122,16 +137,9 @@ export function BackupModal(props: {
         )}
       </h3>
       {file.state === 'unsupported' ? (
-        <p className="hint">
-          このブラウザでは使えません（PC の Chrome / Edge で使えます）。端末内の自動バックアップはブラウザのデータを消すと一緒に消えるので、
-          ときどき下の「書き出す」でファイルに保存してください。
-        </p>
+        <p className="hint">このブラウザでは使えません</p>
       ) : (
         <>
-          <p className="hint">
-            選んだファイルへ、変更のたびに自動で書き出します。ブラウザのデータが消えても、このファイルを「読み込む」で戻せます。
-            ブラウザを開き直したときは、メニューに出る「再開」を 1 回押してください（ブラウザの決まりです）。
-          </p>
           {file.state === 'off' && (
             <button type="button" className="btn wide primary" disabled={busy} onClick={() => void act(props.onChooseFile)}>
               保存先のファイルを選ぶ
@@ -179,8 +187,17 @@ export function BackupModal(props: {
       <h3>
         <i className="gem" />
         手動（書き出し・読み込み）
+        <InfoButton title="手動（書き出し・読み込み）">
+          <InfoList
+            items={[
+              ['使いどき', '機種変更や、別のブラウザへ移すとき。'],
+              ['書き出す', '今のデータを JSON ファイルに保存します。'],
+              ['読み込む', 'ファイルの内容で今のデータを置き換えます。置き換える前の状態は自動バックアップに残ります。'],
+              ['保存領域の保護', '有効なら、容量が足りなくなってもブラウザが勝手にデータを消しません。'],
+            ]}
+          />
+        </InfoButton>
       </h3>
-      <p className="hint">機種変更や別のブラウザへ移すときに使います。読み込むと今のデータは置き換わります（置き換える前の状態は自動バックアップに残ります）。</p>
       <div className="btns">
         <button type="button" className="btn" onClick={exportJson}>
           書き出す
@@ -197,7 +214,7 @@ export function BackupModal(props: {
       )}
       <p className="hint">
         保存領域の保護:{' '}
-        {props.persisted == null ? 'このブラウザでは確認できません' : props.persisted ? '有効（容量が足りなくなってもブラウザが勝手に消しません）' : '未許可（ブラウザが容量不足のときに消す可能性があります）'}
+        {props.persisted == null ? 'このブラウザでは確認できません' : props.persisted ? '有効' : '未許可'}
       </p>
 
       {pending && (

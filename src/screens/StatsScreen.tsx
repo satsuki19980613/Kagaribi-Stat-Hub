@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BarChart, LineChart, type LineSeries } from '../components/charts';
 import { ScrollBox } from '../components/ScrollBox';
-import { Back, Modal, PaneHead } from '../components/ui';
+import { Back, InfoButton, InfoList, Modal, PaneHead } from '../components/ui';
 import { longDate, shortDate } from '../domain/date';
 import { MAX_FOCUS, slotOf, type FocusEntry } from '../domain/focus';
 import type { AppData, Member } from '../domain/model';
@@ -102,7 +102,7 @@ function MemberChips(props: { members: Member[]; focus: FocusEntry[]; onToggle: 
       </div>
       <div className="chips-foot">
         <span>
-          強調 {props.focus.length} / {MAX_FOCUS} · 点線はメンバー平均
+          強調 {props.focus.length} / {MAX_FOCUS}
         </span>
         {props.focus.length > 0 && (
           <button type="button" className="lnk" onClick={props.onClear}>
@@ -269,7 +269,20 @@ export function StatsScreen(props: {
 
           <section className="panel">
             <div className="panel-h cmp-h">
-              <b>累積ポイント推移</b>
+              <span className="pt">
+                <b>累積ポイント推移</b>
+                <InfoButton title="累積ポイント推移">
+                  <p>シーズンの初日から、その日までのポイントを足し上げた線です。</p>
+                  <InfoList
+                    items={[
+                      ['色の線', '強調したメンバー。下のチップを押すと選べます（最大 8 人）。色はメンバーごとに決まっていて、選び直しても変わりません。'],
+                      ['破線', 'メンバー平均。その日までのクラブの合計 ÷ このシーズンに 1 回以上参加した人数です。'],
+                      ['点々の線', `右上で選んだ他クラブの 1 人あたり。クラブの累計 ÷ 定員 ${CLUB_CAPACITY} 人で出しています（他クラブの人数はポストに無いため）。`],
+                    ]}
+                  />
+                  <p>グラフを押すと、その日の値が出ます。</p>
+                </InfoButton>
+              </span>
               <label className="club-pick cmp-pick">
                 <i className="key" aria-hidden="true" />
                 <span className="sr">他クラブ（1人あたり）と比べる</span>
@@ -293,19 +306,26 @@ export function StatsScreen(props: {
               ariaLabel={`S${season} の累積ポイント推移`}
             />
             <MemberChips members={rows.map((r) => r.member)} focus={props.focus} onToggle={props.onToggleFocus} onClear={props.onClearFocus} />
-            {cmpLine && (
-              <p className="hint">
-                点々の線は {cmpLine.name} の 1 人あたり（クラブの累計 ÷ 定員 {CLUB_CAPACITY} 人）。他クラブの人数はポストに無いので、定員で割っています。
-              </p>
-            )}
           </section>
-
-          <ClubPanel data={data} club={props.club} season={season} today={today} />
 
           <section className="panel">
             <div className="panel-h">
-              <b>メンバー別</b>
-              <span className="rt">見出しで並べ替え · 行で詳細</span>
+              <span className="pt">
+                <b>メンバー別</b>
+                <InfoButton title="メンバー別の表">
+                  <InfoList
+                    items={[
+                      ['合計 · 平均', 'そのシーズンのポイントの合計と、1 回あたりの平均（1位 +5 · 2位 +3 · 3位 +2 · 4位 +1 · 5位 ±0 · 6位 −1）。'],
+                      ['加点率', '1〜4位（ポイントが +1 以上）になった割合。'],
+                      ['1位率', '1位になった割合。'],
+                      ['平均順位', '順位の平均。小さいほど上位です。'],
+                      ['参加', 'そのシーズンに記録した回数。'],
+                      ['生存T', '生存ターン数 = 参加ハンド数 ÷ (参加回数 × VPIP)。シーズン末の時点で最新のスタッツから計算します。シーズンより前に入力した値は薄く表示します。'],
+                    ]}
+                  />
+                  <p>見出しを押すと並べ替え、行を押すとそのメンバーの詳細が開きます。いちばん上の行はメンバー平均です。</p>
+                </InfoButton>
+              </span>
             </div>
             <ScrollBox className="tbl-scroll fixed">
               <table className="tbl stats">
@@ -367,11 +387,9 @@ export function StatsScreen(props: {
                 </tbody>
               </table>
             </ScrollBox>
-            <p className="hint">
-              加点率 = 1〜4位の割合。生存T = 参加ハンド数 ÷ (参加回数 × VPIP)。シーズン末時点で最新のスタッツから計算し、
-              シーズンより前に入力した値は薄く表示します。
-            </p>
           </section>
+
+          <ClubPanel data={data} club={props.club} season={season} today={today} />
         </>
       )}
 
@@ -386,8 +404,20 @@ export function StatsScreen(props: {
           </select>
           <section className="panel">
             <div className="panel-h">
-              <b>{metricInfo.label}の推移</b>
-              <span className="rt">シーズンごと</span>
+              <span className="pt">
+                <b>{metricInfo.label}の推移</b>
+                <InfoButton title="シーズン推移">
+                  <p>上で選んだ指標を、シーズンごとに並べた線です。</p>
+                  <InfoList
+                    items={[
+                      ['色の線', '強調したメンバー（下のチップで選ぶ、最大 8 人）。'],
+                      ['破線', 'メンバー平均（そのシーズンに値のあるメンバーの平均）。'],
+                      ['生存ターン数', '各シーズン中に入力したスタッツの最新値です。入力の無いシーズンは線が途切れます。'],
+                    ]}
+                  />
+                  <p>参加の無いシーズンは線が途切れます。</p>
+                </InfoButton>
+              </span>
             </div>
             <LineChart
               labels={asc.map((no) => `S${no}`)}
@@ -401,7 +431,6 @@ export function StatsScreen(props: {
               empty={metric === 'survival' ? 'シーズン中に入力したスタッツがありません' : undefined}
             />
             <MemberChips members={trendMembers} focus={props.focus} onToggle={props.onToggleFocus} onClear={props.onClearFocus} />
-            {metric === 'survival' && <p className="hint">各シーズン中に入力したスタッツの最新値です。入力の無いシーズンは線が途切れます。</p>}
           </section>
 
           <section className="panel">
@@ -451,8 +480,12 @@ export function StatsScreen(props: {
 
           <section className="panel">
             <div className="panel-h">
-              <b>クラブ合計ポイント</b>
-              <span className="rt">メンバー全員の合計</span>
+              <span className="pt">
+                <b>クラブ合計ポイント</b>
+                <InfoButton title="クラブ合計ポイント">
+                  <p>シーズンごとの、メンバー全員のポイントの合計です（このアプリで記録したぶん）。</p>
+                </InfoButton>
+              </span>
             </div>
             <BarChart
               labels={asc.map((no) => `S${no}`)}
@@ -501,7 +534,7 @@ function MemberDetail(props: { member: Member; data: AppData; onClose: () => voi
         </div>
       </div>
       <p className="hint">
-        参加回数（ゲーム内の通算・自動カウント）: <span className="nw">{matchCountOf(member, data.records)} 回</span>
+        参加回数（通算）: <span className="nw">{matchCountOf(member, data.records)} 回</span>
       </p>
 
       <h3>

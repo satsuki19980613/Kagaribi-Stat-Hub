@@ -3,7 +3,7 @@ import { longDate, shortDate } from '../domain/date';
 import type { AppData, Member, StatSnapshot } from '../domain/model';
 import { MAX_ACTIVE_MEMBERS } from '../domain/model';
 import { latestSnapshot, latestSurvivalSnapshot, matchCountOf, survivalOf } from '../domain/stats';
-import { Back, ConfirmDialog, Modal, PaneHead } from '../components/ui';
+import { Back, ConfirmDialog, InfoButton, InfoList, Modal, PaneHead } from '../components/ui';
 import { parseStatText, readNum } from '../domain/statInput';
 
 export interface MemberSave {
@@ -65,13 +65,22 @@ export function MembersScreen(props: {
     <div className="pane">
       <Back label="MENU" onClick={props.onBack} />
       <PaneHead eyebrow="MEMBERS" title="メンバー">
+        <InfoButton title="メンバー">
+          <InfoList
+            items={[
+              ['人数', `有効メンバーは最大 ${MAX_ACTIVE_MEMBERS} 人。外したメンバーはアーカイブに残り（記録はそのまま）、いつでも戻せます。`],
+              ['参加回数', 'はじめにこれまでの回数を入れると、あとは記録するたびに自動で +1 されます。'],
+              ['基本スタッツ', '優勝回数・VPIP・参加ハンド数は任意です。入力した日の値として残り、生存ターン数の計算に使います。'],
+              ['右の数字', '最新のスタッツから計算した生存ターン数です。'],
+            ]}
+          />
+        </InfoButton>
         <button type="button" className="btn sm primary" disabled={full} onClick={() => setEdit('new')}>
           ＋ 追加
         </button>
       </PaneHead>
       <p className="hint">
-        有効メンバー <b className="num">{active.length}</b> / {MAX_ACTIVE_MEMBERS} 人。参加回数は記録するたびに自動で増えます。
-        基本スタッツ（優勝回数・VPIP・参加ハンド数）は任意で、入力した日の値として残ります。
+        有効メンバー <b className="num">{active.length}</b> / {MAX_ACTIVE_MEMBERS} 人
       </p>
       {full && <div className="notice warn">有効メンバーが上限の {MAX_ACTIVE_MEMBERS} 人です。追加するには誰かをアーカイブしてください。</div>}
 
@@ -207,9 +216,19 @@ function MemberModal(props: {
       </label>
       <input id="m-name" className="tin txt" value={name} maxLength={24} autoComplete="off" onChange={(e) => setName(e.target.value)} />
 
-      <label className="lbl" htmlFor="m-matches">
-        参加回数（クラブマッチ）
-      </label>
+      <div className="lbl-row">
+        <label className="lbl" htmlFor="m-matches">
+          参加回数（クラブマッチ）
+        </label>
+        <InfoButton title="参加回数">
+          <p>ゲーム内の「プレイヤー情報」→「クラブマッチ」タブにある参加回数です。</p>
+          <p>
+            {member
+              ? `記録するたびに自動で +1 されます（このアプリでの記録 ${nRecords} 件を含んだ数です）。ゲーム内の値とずれたら、ここで直してください。`
+              : 'はじめにこれまでの参加回数を入れてください。以降は記録するたびに自動で +1 されます。'}
+          </p>
+        </InfoButton>
+      </div>
       <input
         id="m-matches"
         className="tin"
@@ -218,20 +237,21 @@ function MemberModal(props: {
         value={matches}
         onChange={(e) => setMatches(e.target.value)}
       />
-      <p className="hint">
-        {member
-          ? `記録するたびに自動で +1 されます（このアプリでの記録 ${nRecords} 件を含む）。ゲーム内の値とずれたら直してください。`
-          : 'これまでの参加回数を入れてください。以降は記録するたびに自動で +1 されます。'}
-      </p>
 
       <h3>
         <i className="gem" />
         基本スタッツ（任意）
+        <InfoButton title="基本スタッツ">
+          <p>ゲーム内の「プレイヤー情報」→「クラブマッチ」タブの値です。入力は任意で、空欄のままでも保存できます。</p>
+          <InfoList
+            items={[
+              ['残し方', `入れたときだけ、今日（${shortDate(props.today)}）の値として残します。前の値は履歴に残ります。`],
+              ['生存ターン数', '参加ハンド数 ÷ (参加回数 × VPIP)。ここで入れた参加回数・VPIP・参加ハンド数から計算します。'],
+              ['入れ方', 'VPIP と参加ハンド数は 2 つそろえて入れてください。'],
+            ]}
+          />
+        </InfoButton>
       </h3>
-      <p className="hint">
-        ゲーム内の「プレイヤー情報」→「クラブマッチ」タブの値です。入れたときだけ、今日（{shortDate(props.today)}）の値として残します。
-        生存ターン数は、ここで入れた 参加回数・VPIP・参加ハンド数 から計算します。
-      </p>
       {last && (
         <p className="hint">
           前回（{longDate(last.date)}）: <span className="nw">参加 {last.matches}回</span>{last.wins != null && ` · 優勝 ${last.wins}回`}
@@ -262,7 +282,6 @@ function MemberModal(props: {
       <div className="survprev">
         <span className="statlbl">生存ターン数</span>
         <b className="num">{preview != null && Number.isFinite(preview) ? preview.toFixed(1) : '—'}</b>
-        <span className="hint">= 参加ハンド数 ÷ (参加回数 × VPIP)</span>
       </div>
 
       {issues.length > 0 && (

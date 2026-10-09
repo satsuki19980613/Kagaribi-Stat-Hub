@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useBackLayer } from './BackLayer';
 
 /** 炎のマーク（アプリアイコンと同じ形）。 */
@@ -154,5 +154,51 @@ export function ConfirmDialog(props: {
     >
       {props.body && <p>{props.body}</p>}
     </Modal>
+  );
+}
+
+/**
+ * インフォメーションマーク。画面に小さな説明文を並べる代わりに、押すと説明のモーダルを開く。
+ * 中身は短い段落・用語と意味の組（InfoList）で、読みやすく書く。
+ */
+export function InfoButton(props: { title: string; children: ReactNode }): JSX.Element {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        type="button"
+        className="info-btn"
+        aria-label={`${props.title}の説明`}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen(true);
+        }}
+      >
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <circle cx="10" cy="10" r="8.6" fill="none" stroke="currentColor" strokeWidth="1.6" />
+          <circle cx="10" cy="6.2" r="1.25" fill="currentColor" />
+          <path d="M10 9v5.6" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+        </svg>
+      </button>
+      {open && (
+        <Modal eyebrow="INFO" title={props.title} size="sm" onClose={() => setOpen(false)}>
+          <div className="info">{props.children}</div>
+        </Modal>
+      )}
+    </>
+  );
+}
+
+/** 説明モーダルの中の「用語 — 意味」の並び。 */
+export function InfoList(props: { items: [ReactNode, ReactNode][] }): JSX.Element {
+  return (
+    <dl className="info-dl">
+      {props.items.map(([k, v], i) => (
+        <div key={i}>
+          <dt>{k}</dt>
+          <dd>{v}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }

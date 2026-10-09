@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { LineChart, type LineSeries } from '../components/charts';
 import { ScrollBox } from '../components/ScrollBox';
+import { InfoButton, InfoList } from '../components/ui';
 import type { ClubState } from '../data/clubData';
 import { OWN_CLUB, clubSeries, latestRound, ownSeries, topAverage } from '../domain/clubRanking';
 import type { AppData } from '../domain/model';
@@ -52,12 +53,25 @@ export function ClubPanel(props: { data: AppData; club: ClubState; season: numbe
   const series: LineSeries[] = [{ id: 'own', name: OWN_CLUB, values: own.values, slot: 0, tone: 'own' }];
   if (picked && cd) series.push({ id: 'pick', name: picked.name, values: clubSeries(cd, season, picked.name, n), slot: 0 });
   const avg = cd && latest ? topAverage(cd, season, n) : undefined;
-  const mixed = own.official.some(Boolean) && own.official.some((v, i) => !v && own.values[i] != null);
 
   return (
     <section className="panel club">
       <div className="panel-h">
-        <b>クラブ順位 · 上位30</b>
+        <span className="pt">
+          <b>クラブ順位 · 上位30</b>
+          <InfoButton title="クラブ順位 · 上位30">
+            <p>クラブマッチの上位 30 クラブの累計ポイントです。X の @c0pmvd さんが毎節ポストしている集計を取り込んでいます。</p>
+            <InfoList
+              items={[
+                [OWN_CLUB, '上位 30 に入った節は公式の値、圏外の節はこのアプリで記録したポイントの合計です。'],
+                ['選んだクラブ', '右上のプルダウンか、表の行を押して選びます。もう一度押すと外れます。'],
+                ['破線', '上位 30 クラブの累計の平均。'],
+                ['表', '最新の節の順位。↑↓ は前の節からの上がり下がり、new は圏外から入ったクラブ。「—」は圏外から入ったため、その節の得点がポストに無いものです。'],
+              ]}
+            />
+            <p>ネットにつながったとき（起動時・画面に戻ったとき）に自動で読み込み、オフラインのときは前回の内容を出します。</p>
+          </InfoButton>
+        </span>
         <label className="club-pick">
           <span className="sr">比べるクラブ</span>
           <select value={picked?.name ?? ''} onChange={(e) => setPick(e.target.value)} disabled={others.length === 0}>
@@ -140,17 +154,12 @@ export function ClubPanel(props: { data: AppData; club: ClubState; season: numbe
       <p className="hint">
         {!cd
           ? club.error
-            ? `クラブ順位を読み込めませんでした（${club.error}）。ネットにつながると自動で読み直します。`
-            : 'クラブ順位はネットにつながると自動で読み込みます。'
+            ? `クラブ順位を読み込めませんでした（${club.error}）`
+            : 'クラブ順位はまだ読み込まれていません'
           : !latest
-            ? `S${season} の順位はまだありません。`
-            : `第${latest.round}節まで。行を押すとそのクラブと比べます。`}
-        {mixed
-          ? ` ${OWN_CLUB}は上位30に入った節は公式の値、圏外の節はアプリの記録の合計です。`
-          : !own.official.some(Boolean)
-            ? ` ${OWN_CLUB}の線はアプリの記録の合計です。`
-            : ''}
-        {club.checkedAt != null && cd && <span className="nw muted"> 確認 {fmtAt(club.checkedAt)}</span>}
+            ? `S${season} の順位はまだありません`
+            : `第${latest.round}節まで`}
+        {club.checkedAt != null && cd && <span className="nw muted"> · 確認 {fmtAt(club.checkedAt)}</span>}
       </p>
     </section>
   );

@@ -27,7 +27,8 @@ import { StatsScreen } from './screens/StatsScreen';
 type Screen = 'menu' | 'record' | 'history' | 'members' | 'stats' | 'seasons';
 type Tab = 'record' | 'members' | 'stats';
 
-const THEME_KEY = 'kg-theme';
+/** 前の版がテーマを覚えていたキー。今は起動のたびにライトで始めるので、起動時に消す。 */
+const OLD_THEME_KEY = 'kg-theme';
 const FOCUS_KEY = 'ksh-focus';
 const EMPTY: AppData = { members: [], records: [], snapshots: [], seasons: [] };
 
@@ -112,6 +113,14 @@ export function App(): JSX.Element {
       return null;
     }
   }
+
+  useEffect(() => {
+    try {
+      localStorage.removeItem(OLD_THEME_KEY);
+    } catch {
+      /* noop */
+    }
+  }, []);
 
   // 起動: 全件読み込み、注目メンバーを復元（初回はそのシーズンの上位 3 人）。
   useEffect(() => {
@@ -366,15 +375,9 @@ export function App(): JSX.Element {
 
   function toggleTheme(e: React.MouseEvent<HTMLButtonElement>): void {
     const r = document.documentElement;
-    // 既定はライト（端末のダーク設定には合わせない）。
-    const cur = r.dataset.theme === 'dark' ? 'dark' : 'light';
-    const next = cur === 'dark' ? 'light' : 'dark';
+    // 起動のたびにライトで始める（端末のダーク設定にも、前回の切り替えにも合わせない）。ダークはこの画面を開いている間だけ。
+    const next = r.dataset.theme === 'dark' ? 'light' : 'dark';
     r.dataset.theme = next;
-    try {
-      localStorage.setItem(THEME_KEY, next);
-    } catch {
-      /* noop */
-    }
     if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
       e.currentTarget.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(180deg)' }], {
         duration: 500,

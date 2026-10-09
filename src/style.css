@@ -760,3 +760,35 @@ select.tin{background-image:linear-gradient(45deg,transparent 50%,var(--pk-ink) 
 .club-pick select{border:1.5px solid var(--pk-line);background-color:var(--face)}
 .cmp-pick select{border-color:var(--pk-line)}
 .mtag{display:inline-block;font-family:var(--f-num);font-size:10px;font-weight:800;letter-spacing:.1em;line-height:1.5;padding:1px 7px;border:1.5px solid var(--pk-line);color:var(--pk-ink);background:var(--face)}
+
+/* ===== インフォメーションマーク（小さな説明はすべてここから開くモーダルへ） ===== */
+.info-btn{position:relative;flex:none;display:inline-grid;place-items:center;width:22px;height:22px;padding:0;border:0;background:none;color:var(--pk-ink);cursor:pointer;vertical-align:middle;transition:transform .12s,color .15s}
+.info-btn svg{width:18px;height:18px}
+.info-btn::after{content:"";position:absolute;inset:-9px}
+.info-btn:active{transform:scale(.9)}
+@media (hover:hover){.info-btn:hover{color:var(--pk)}}
+.pt{display:inline-flex;align-items:center;gap:4px;min-width:0}
+.pane-h .acts{align-items:center}
+.lbl-row{display:flex;align-items:center;gap:4px;margin:12px 0 5px}
+.lbl-row .lbl{margin:0}
+.gd-scroll h3 .info-btn{margin-left:-2px}
+.gd-head .acts .info-btn{margin-left:-3px}
+.info{display:grid;gap:12px}
+.cmp-pick:has(select:disabled) .key,.cmp-pick:not(:has(select option:checked:not([value=""]))) .key{opacity:.35}
+.info p{margin:0;font-size:14px;line-height:1.8;color:var(--ink)}
+.info-dl{display:grid;gap:0;margin:0;border-top:1.5px solid var(--pk-soft)}
+.info-dl>div{display:grid;grid-template-columns:minmax(5.5em,auto) minmax(0,1fr);gap:4px 14px;padding:10px 0;border-bottom:1px solid var(--pk-soft)}
+.info-dl dt{font-size:13px;font-weight:900;color:var(--pk-ink);line-height:1.7}
+.info-dl dd{margin:0;font-size:14px;line-height:1.7;color:var(--ink)}
+@media (max-width:380px){.info-dl>div{grid-template-columns:1fr}}
+.panel-h .pt{flex:0 0 auto}
+.info>.info-dl:first-child{border-top:0}
+/* 狭い画面では、比べるクラブのプルダウンを見出しの下の行に全幅で置く */
+@media (max-width:440px){
+  .panel-h.cmp-h{flex-wrap:wrap}
+  .cmp-h .cmp-pick{flex:1 1 100%;max-width:none;margin-left:0}
+}
+@media (max-width:360px){
+  .club .panel-h{flex-wrap:wrap}
+  .club .club-pick{flex:1 1 100%;max-width:none;margin-left:0}
+}
