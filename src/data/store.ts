@@ -103,6 +103,23 @@ export function applyRecords(puts: readonly MatchRecord[], deletes: readonly Mat
   });
 }
 
+/** 記録画面の保存（その日の記録とスタッツ）を 1 トランザクションで。 */
+export function applyDay(
+  puts: readonly MatchRecord[],
+  deletes: readonly MatchRecord[],
+  snapPuts: readonly StatSnapshot[],
+  snapDeletes: readonly StatSnapshot[],
+): Promise<void> {
+  return write([S.records, S.snapshots], (t) => {
+    const os = t.objectStore(S.records);
+    for (const r of deletes) os.delete(r.id);
+    for (const r of puts) os.put(r);
+    const ss = t.objectStore(S.snapshots);
+    for (const x of snapDeletes) ss.delete(x.id);
+    for (const x of snapPuts) ss.put(x);
+  });
+}
+
 export function putSnapshot(s: StatSnapshot): Promise<void> {
   return write([S.snapshots], (t) => t.objectStore(S.snapshots).put(s));
 }

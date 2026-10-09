@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { addDays, longDate, shortDate } from '../domain/date';
-import { planIsEmpty, planSave, type Draft, type DraftRow } from '../domain/dayEntry';
+import { matchesOnDay, planDay, snapshotOn, type Draft, type DraftRow } from '../domain/dayEntry';
 import type { AppData, Member, Part, Rank } from '../domain/model';
+import { EMPTY_STAT_TEXT, isBlankStat, readNum, type StatText } from '../domain/statInput';
+import { latestSnapshot, survivalOf } from '../domain/stats';
 import { RANKS, fmtPt, pointsOf } from '../domain/points';
 import { isMatchDay, seasonOf } from '../domain/season';
 import { Back, ConfirmDialog, PaneHead } from '../components/ui';
@@ -40,12 +42,16 @@ export function RecordScreen(props: {
   const { date, draft } = entry;
   const [pendingDate, setPendingDate] = useState<string | null>(null);
   const [confirmDel, setConfirmDel] = useState(false);
+  // スタッツ欄を開いているメンバー（任意入力なので普段は閉じておく）。
+  const [openStats, setOpenStats] = useState<ReadonlySet<string>>(new Set());
 
   const season = seasonOf(date, data.seasons);
   const matchDay = isMatchDay(date, data.seasons);
-  const plan = planSave(data.records, date, draft);
-  const dirty = !planIsEmpty(plan);
+  const day = planDay(data, date, draft);
+  const plan = day.rec;
+  const dirty = day.dirty;
   const deletes = plan.deletes.length;
+  const statN = day.stats.puts.length + day.stats.deletes.length;
 
   const recordedIds = new Set(data.records.filter((r) => r.date === date).map((r) => r.memberId));
   const rows: Member[] = data.members.filter((m) => !m.archived || recordedIds.has(m.id) || draft[m.id]?.rank != null);
@@ -55,6 +61,15 @@ export function RecordScreen(props: {
 
   function setRow(id: string, row: DraftRow): void {
     props.onDraft({ ...draft, [id]: row });
+  }
+
+  function toggleStats(id: string): void {
+    setOpenStats((cur) => {
+      const nx = new Set(cur);
+      if (nx.has(id)) nx.delete(id);
+      else nx.add(id);
+      return nx;
+    });
   }
 
   function goDate(next: string | null): void {
@@ -140,17 +155,25 @@ export function RecordScreen(props: {
                       {m.archived && <span className="mtag">アーカイブ</span>}
                     </span>
                     {row.rank != null && (
-                      <span className="partsel" role="group" aria-label="部">
-                        {([1, 2] as Part[]).map((p) => (
-                          <button
-                            key={p}
-                            type="button"
-                            aria-pressed={row.part === p}
-                            onClick={() => setRow(m.id, { ...row, part: row.part === p ? null : p })}
-                          >
-                            {p}部
-                          </button>
-                        ))}
+                      <span className="ent-tools">
+                        <span className="partsel" role="group" aria-label="部">
+                          {([1, 2] as Part[]).map((p) => (
+                            <button
+                              key={p}
+                              type="button"
+                              aria-pressed={row.part === p}
+                              onClick={() => setRow(m.id, { ...row, part: row.part === p ? null : p })}
+                            >
+                              {p}部
+                            </button>
+                          ))}
+                        </span>
+                        <StatToggle
+                          open={openStats.has(m.id)}
+                          has={!!row.stats && !isBlankStat(row.stats)}
+                          error={!!day.stats.issues[m.id]}
+                          onClick={() => toggleStats(m.id)}
+                        />
                       </span>
                     )}
                   </div>
@@ -168,6 +191,16 @@ export function RecordScreen(props: {
                       </button>
                     ))}
                   </div>
+                  {row.rank != null && openStats.has(m.id) && (
+                    <StatDrawer
+                      member={m}
+                      data={data}
+                      date={date}
+                      value={row.stats ?? snapshotText(data, m.id, date)}
+                      issues={day.stats.issues[m.id] ?? []}
+                      onChange={(stats) => setRow(m.id, { ...row, stats })}
+                    />
+                  )}
                 </li>
               );
             })}
@@ -176,12 +209,20 @@ export function RecordScreen(props: {
       )}
 
       <div className="savebar">
-        <button type="button" className="btn big primary" disabled={!dirty || season == null} onClick={() => (deletes > 0 ? setConfirmDel(true) : props.onSave())}>
-          {dirty ? (
+        <button
+          type="button"
+          className="btn big primary"
+          disabled={!dirty || day.blocked || season == null}
+          onClick={() => (deletes > 0 ? setConfirmDel(true) : props.onSave())}
+        >
+          {day.blocked ? (
+            'スタッツの入力を確認してください'
+          ) : dirty ? (
             <>
               保存
               <small>
                 追加 {plan.added} · 修正 {plan.updated} · 取消 {deletes}
+                {statN > 0 && ` · スタッツ ${statN}`}
               </small>
             </>
           ) : (
@@ -213,6 +254,85 @@ export function RecordScreen(props: {
           onClose={() => setPendingDate(null)}
         />
       )}
+    </div>
+  );
+}
+
+/** その日に保存済みのスタッツ（無ければ空）。 */
+function snapshotText(data: AppData, memberId: string, date: string): StatText {
+  const s = snapshotOn(data.snapshots, memberId, date);
+  return s
+    ? { wins: s.wins != null ? String(s.wins) : '', vpip: s.vpip != null ? String(s.vpip) : '', hands: s.hands != null ? String(s.hands) : '' }
+    : { ...EMPTY_STAT_TEXT };
+}
+
+/** 行の中の小さな切り替え。入力が無いときは点線で控えめに「任意」と見せる。 */
+function StatToggle(props: { open: boolean; has: boolean; error: boolean; onClick: () => void }): JSX.Element {
+  return (
+    <button
+      type="button"
+      className={`stat-tg${props.has ? ' has' : ''}${props.error ? ' err' : ''}`}
+      aria-expanded={props.open}
+      onClick={props.onClick}
+    >
+      {props.has ? 'スタッツ ✓' : '＋ スタッツ'}
+      {!props.has && <span className="opt">任意</span>}
+    </button>
+  );
+}
+
+/** 任意のスタッツ入力（優勝回数・VPIP・参加ハンド数）。前回の値を薄く見せ、空欄のままでよいことを伝える。 */
+function StatDrawer(props: {
+  member: Member;
+  data: AppData;
+  date: string;
+  value: StatText;
+  issues: string[];
+  onChange: (v: StatText) => void;
+}): JSX.Element {
+  const { member, data, date, value } = props;
+  const matches = matchesOnDay(member, data.records, date, true);
+  const prev = latestSnapshot(
+    data.snapshots.filter((s) => s.date < date),
+    member.id,
+  );
+  const v = readNum(value.vpip);
+  const h = readNum(value.hands);
+  const surv = v != null && h != null ? survivalOf({ matches, vpip: v, hands: h }) : null;
+  const field = (key: keyof StatText, label: string, mode: 'numeric' | 'decimal', prevVal: number | undefined, unit?: string): JSX.Element => (
+    <label className="sd-f">
+      <span>{label}</span>
+      <input
+        className="tin"
+        inputMode={mode}
+        value={value[key]}
+        placeholder={prevVal != null ? `${prevVal}${unit ?? ''}` : '—'}
+        onChange={(e) => props.onChange({ ...value, [key]: e.target.value })}
+      />
+    </label>
+  );
+  return (
+    <div className="stat-drawer">
+      <div className="sd-row">
+        {field('wins', '優勝', 'numeric', prev?.wins)}
+        {field('vpip', 'VPIP %', 'decimal', prev?.vpip)}
+        {field('hands', '参加ハンド', 'numeric', prev?.hands)}
+      </div>
+      <p className="sd-note">
+        {props.issues.length > 0 ? (
+          <span className="warn-t">{props.issues[0]}</span>
+        ) : (
+          <>
+            空欄のままで大丈夫です（薄い数字は前回の値）。参加 {matches} 回として残します
+            {surv != null && Number.isFinite(surv) && (
+              <>
+                {' '}
+                · 生存T <b className="num">{surv.toFixed(1)}</b>
+              </>
+            )}
+          </>
+        )}
+      </p>
     </div>
   );
 }

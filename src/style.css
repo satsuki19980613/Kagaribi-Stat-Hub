@@ -420,7 +420,7 @@ button.brand{border:0;background:none;padding:0;color:inherit;cursor:pointer}
 /* 凡例兼メンバー選択 */
 .chips-wrap{display:grid;gap:6px}
 .chips{display:flex;flex-wrap:nowrap;gap:4px;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;
-  margin:0 -14px;padding:2px 14px 8px;scroll-padding:0 14px;scrollbar-width:thin}
+  margin:0 -14px;padding:2px 14px 8px;scroll-padding:0 14px}
 .chip{flex:none}
 .chip.legend-avg{cursor:default;border-style:dashed;color:var(--ink-2);position:sticky;left:-14px;z-index:1;background:var(--face)}
 .chips .chip.legend-avg .key{width:14px}
@@ -490,3 +490,34 @@ button.brand{border:0;background:none;padding:0;color:inherit;cursor:pointer}
 .bk-list{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:4px;max-height:240px;overflow:auto;overscroll-behavior:contain}
 .bk-list li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;padding:6px 10px;border:1px solid var(--hair);background:var(--glass-lo);font-size:12px}
 .bk-list .num{font-weight:700;font-size:13px}
+
+/* 4 つ並びのタイル（スタッツ）。スマホでは 2×2 */
+.hs-grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:560px){.hs-grid.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* スクロールバー: 矢印もトラックも無い、細い線だけ */
+::-webkit-scrollbar{width:4px;height:4px;background:transparent}
+::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--hair-2)}
+::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+::-webkit-scrollbar-button{display:none;width:0;height:0}
+@supports not selector(::-webkit-scrollbar){*{scrollbar-width:thin;scrollbar-color:var(--hair-2) transparent}}
+
+/* 記録画面: 任意のスタッツ（普段は畳む・点線で控えめに） */
+.ent-tools{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.stat-tg{display:inline-flex;align-items:center;gap:5px;border:1px dashed var(--hair-2);background:transparent;color:var(--muted);
+  font-family:var(--f-ui);font-size:10px;font-weight:700;padding:2px 7px;cursor:pointer;white-space:nowrap}
+.stat-tg .opt{font-size:9px;font-weight:600;color:var(--muted);opacity:.75;letter-spacing:.04em}
+.stat-tg[aria-expanded="true"]{border-style:solid;color:var(--ink-2)}
+.stat-tg.has{border-style:solid;border-color:var(--you);color:var(--you-text)}
+.stat-tg.err{border-style:solid;border-color:var(--cpu);color:var(--cpu-text)}
+@media (hover:hover){.stat-tg:hover{border-color:var(--ink-2);color:var(--ink-2)}}
+.stat-drawer{grid-column:1/-1;display:grid;gap:6px;margin-top:2px;padding-top:8px;border-top:1px dashed var(--hair-2)}
+.sd-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.sd-f{display:grid;gap:3px;min-width:0}
+.sd-f span{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.04em}
+.sd-f .tin{min-width:0;padding:6px 8px;font-size:15px}
+.sd-f .tin::placeholder{color:var(--muted);opacity:.55}
+.sd-note{margin:0;font-size:11px;line-height:1.55;color:var(--muted)}
+.sd-note b{color:var(--ink)}
+@media (pointer:coarse){.stat-tg,.partsel button{min-height:28px}.stat-tg{padding:4px 9px}}

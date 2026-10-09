@@ -199,7 +199,7 @@ export function StatsScreen(props: {
       {mode === 'season' && (
         <>
           <SeasonSelect seasons={props.seasons} value={season} onChange={props.onSeason} overrides={data.seasons} />
-          <div className="hs-grid">
+          <div className="hs-grid four">
             <div className="hs-stat">
               <span className="statlbl">開催</span>
               <b className="hs-val">
@@ -219,6 +219,13 @@ export function StatsScreen(props: {
               <b className="hs-val">
                 {fmtNum(club.avg)}
                 <span className="hs-unit">{fmtRate(club.plusRate)}</span>
+              </b>
+            </div>
+            <div className="hs-stat">
+              <span className="statlbl">平均順位</span>
+              <b className="hs-val">
+                {fmtNum(club.avgRank)}
+                <span className="hs-unit">位</span>
               </b>
             </div>
           </div>
