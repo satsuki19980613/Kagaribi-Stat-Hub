@@ -521,3 +521,19 @@ button.brand{border:0;background:none;padding:0;color:inherit;cursor:pointer}
 .sd-note{margin:0;font-size:11px;line-height:1.55;color:var(--muted)}
 .sd-note b{color:var(--ink)}
 @media (pointer:coarse){.stat-tg,.partsel button{min-height:28px}.stat-tg{padding:4px 9px}}
+
+/* ===== 画面サイズ QA の修正 ===== */
+/* 日本語は文節で折り返す（語尾 1〜2 文字だけが次の行へ落ちないように） */
+body{word-break:auto-phrase}
+p,.hint,.notice,small,.mbtn small{text-wrap:pretty}
+.nw{white-space:nowrap}
+.menu-note{text-align:center;margin-top:6px}
+.panel-h{flex-wrap:wrap}
+.panel-h b{white-space:nowrap}
+@media (max-width:360px){.fgrid:not(.three){grid-template-columns:1fr}}
+.x-sm{width:32px;height:32px}
+.gd-scroll .btn.wide{margin-top:8px}
+/* 高さ固定の表: 名前の列と数値の列で背景をそろえ、続きがある間は下端をぼかす */
+.tbl-scroll.fixed{background:var(--face)}
+.tbl-scroll.fixed.more{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 36px),transparent)}
+@media (pointer:coarse){.stat-tg,.partsel button{min-height:32px}.partsel button{min-width:36px}}

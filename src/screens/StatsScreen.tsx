@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { BarChart, LineChart, type LineSeries } from '../components/charts';
+import { ScrollBox } from '../components/ScrollBox';
 import { Back, Modal, PaneHead } from '../components/ui';
 import { longDate, shortDate } from '../domain/date';
 import { MAX_FOCUS, slotOf, type FocusEntry } from '../domain/focus';
@@ -253,7 +254,7 @@ export function StatsScreen(props: {
               <b>メンバー別</b>
               <span className="rt">見出しで並べ替え · 行で詳細</span>
             </div>
-            <div className="tbl-scroll fixed">
+            <ScrollBox className="tbl-scroll fixed">
               <table className="tbl stats">
                 <thead>
                   <tr>
@@ -312,7 +313,7 @@ export function StatsScreen(props: {
                   })}
                 </tbody>
               </table>
-            </div>
+            </ScrollBox>
             <p className="hint">
               加点率 = 1〜4位の割合。生存T = 参加ハンド数 ÷ (参加回数 × VPIP)。シーズン末時点で最新のスタッツから計算し、
               シーズンより前に入力した値は薄く表示します。
@@ -355,7 +356,7 @@ export function StatsScreen(props: {
               <b>{metricInfo.label}（表）</b>
               <span className="rt">{metricInfo.unit}</span>
             </div>
-            <div className="tbl-scroll fixed">
+            <ScrollBox className="tbl-scroll fixed">
               <table className="tbl stats">
                 <thead>
                   <tr>
@@ -392,7 +393,7 @@ export function StatsScreen(props: {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </ScrollBox>
           </section>
 
           <section className="panel">
@@ -446,7 +447,9 @@ function MemberDetail(props: { member: Member; data: AppData; onClose: () => voi
           <span className="hs-sub">平均 {fmtNum(all.avgRank)} 位</span>
         </div>
       </div>
-      <p className="hint">参加回数（ゲーム内の通算・自動カウント）: {matchCountOf(member, data.records)} 回</p>
+      <p className="hint">
+        参加回数（ゲーム内の通算・自動カウント）: <span className="nw">{matchCountOf(member, data.records)} 回</span>
+      </p>
 
       <h3>
         <i className="gem" />

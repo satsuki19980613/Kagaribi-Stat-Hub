@@ -487,12 +487,6 @@ export function App(): JSX.Element {
           )}
         </main>
 
-        {screen === 'menu' && (
-          <footer className="foot">
-            <span>記録はこの端末のブラウザに保存され、変更のたびに自動でバックアップされます。</span>
-          </footer>
-        )}
-
         {backupOpen && (
           <BackupModal
             data={data}

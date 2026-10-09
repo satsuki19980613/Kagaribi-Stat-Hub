@@ -145,7 +145,7 @@ export function LineChart(props: {
           const li = lastIdx(s.values);
           return li < 0 ? [] : [{ id: s.id, y: y(s.values[li]!) }];
         }),
-        13,
+        15,
         PAD.t + 4,
         PAD.t + ih,
       )

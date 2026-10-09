@@ -279,7 +279,8 @@ function MemberModal(props: {
             <i className="gem" />
             スタッツの履歴
           </h3>
-          <table className="tbl">
+          <div className="tbl-scroll">
+          <table className="tbl stats">
             <thead>
               <tr>
                 <th>日付</th>
@@ -310,6 +311,7 @@ function MemberModal(props: {
               })}
             </tbody>
           </table>
+          </div>
         </>
       )}
 

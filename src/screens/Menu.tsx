@@ -128,6 +128,7 @@ export function Menu(props: {
           バックアップ
         </button>
       </div>
+      <p className="hint menu-note">記録はこの端末のブラウザに保存され、変更のたびに自動でバックアップされます。</p>
     </div>
   );
 }

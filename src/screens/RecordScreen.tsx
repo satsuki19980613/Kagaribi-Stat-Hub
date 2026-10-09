@@ -208,28 +208,29 @@ export function RecordScreen(props: {
         </>
       )}
 
-      <div className="savebar">
-        <button
-          type="button"
-          className="btn big primary"
-          disabled={!dirty || day.blocked || season == null}
-          onClick={() => (deletes > 0 ? setConfirmDel(true) : props.onSave())}
-        >
-          {day.blocked ? (
-            'スタッツの入力を確認してください'
-          ) : dirty ? (
-            <>
-              保存
-              <small>
-                追加 {plan.added} · 修正 {plan.updated} · 取消 {deletes}
-                {statN > 0 && ` · スタッツ ${statN}`}
-              </small>
-            </>
-          ) : (
-            '変更はありません'
-          )}
-        </button>
-      </div>
+      {/* 保存バーは保存するもの（または直すべき入力）があるときだけ出す。 */}
+      {(dirty || day.blocked) && (
+        <div className="savebar">
+          <button
+            type="button"
+            className="btn big primary"
+            disabled={day.blocked || season == null}
+            onClick={() => (deletes > 0 ? setConfirmDel(true) : props.onSave())}
+          >
+            {day.blocked ? (
+              'スタッツの入力を確認してください'
+            ) : (
+              <>
+                保存
+                <small>
+                  追加 {plan.added} · 修正 {plan.updated} · 取消 {deletes}
+                  {statN > 0 && ` · スタッツ ${statN}`}
+                </small>
+              </>
+            )}
+          </button>
+        </div>
+      )}
 
       {confirmDel && (
         <ConfirmDialog
