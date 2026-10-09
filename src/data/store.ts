@@ -6,12 +6,15 @@
  * Node（Vitest）には IndexedDB が無いので、この層はブラウザ（preview）で確認する。純ロジックは domain/ 側。
  */
 
+import type { BackupEntry } from '../domain/autoBackup';
 import type { AppData, MatchRecord, Member, SeasonOverride, StatSnapshot } from '../domain/model';
 
 const DB_NAME = 'kagaribi-stat-hub';
-const VERSION = 1;
-const S = { members: 'members', records: 'records', snapshots: 'snapshots', seasons: 'seasons' } as const;
+// v2: 自動バックアップの履歴（backups）と設定（meta）を追加。
+const VERSION = 2;
+const S = { members: 'members', records: 'records', snapshots: 'snapshots', seasons: 'seasons', backups: 'backups', meta: 'meta' } as const;
 type StoreName = (typeof S)[keyof typeof S];
+/** アプリのデータ本体（バックアップの対象）。 */
 const ALL: StoreName[] = [S.members, S.records, S.snapshots, S.seasons];
 
 function reqToPromise<T>(req: IDBRequest<T>): Promise<T> {
@@ -47,6 +50,8 @@ function openDb(): Promise<IDBDatabase> {
         os.createIndex('memberId', 'memberId', { unique: false });
       }
       if (!db.objectStoreNames.contains(S.seasons)) db.createObjectStore(S.seasons, { keyPath: 'no' });
+      if (!db.objectStoreNames.contains(S.backups)) db.createObjectStore(S.backups, { keyPath: 'id' });
+      if (!db.objectStoreNames.contains(S.meta)) db.createObjectStore(S.meta, { keyPath: 'key' });
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => {
@@ -122,5 +127,37 @@ export function replaceAll(data: AppData): Promise<void> {
     for (const r of data.records) t.objectStore(S.records).put(r);
     for (const s of data.snapshots) t.objectStore(S.snapshots).put(s);
     for (const o of data.seasons) t.objectStore(S.seasons).put(o);
+  });
+}
+
+// ---- 自動バックアップ（端末内の履歴） ----
+
+export async function listBackups(): Promise<BackupEntry[]> {
+  const db = await openDb();
+  const all = (await reqToPromise(db.transaction([S.backups], 'readonly').objectStore(S.backups).getAll())) as BackupEntry[];
+  return all.sort((a, b) => b.at - a.at);
+}
+
+/** 1 件を追加（または同じ id を上書き）し、古いものを消す。 */
+export function writeBackup(entry: BackupEntry, deleteIds: readonly number[]): Promise<void> {
+  return write([S.backups], (t) => {
+    const os = t.objectStore(S.backups);
+    for (const id of deleteIds) os.delete(id);
+    os.put(entry);
+  });
+}
+
+// ---- 設定（自動保存先のファイルなど） ----
+
+export async function getMeta<T>(key: string): Promise<T | undefined> {
+  const db = await openDb();
+  const row = (await reqToPromise(db.transaction([S.meta], 'readonly').objectStore(S.meta).get(key))) as { key: string; value: T } | undefined;
+  return row?.value;
+}
+
+export function setMeta(key: string, value: unknown): Promise<void> {
+  return write([S.meta], (t) => {
+    if (value === undefined) t.objectStore(S.meta).delete(key);
+    else t.objectStore(S.meta).put({ key, value });
   });
 }

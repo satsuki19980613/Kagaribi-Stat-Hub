@@ -14,7 +14,9 @@ import {
   seasonAxis,
   seasonCumulative,
   seasonRows,
+  seasonAverage,
   seasonsOfMember,
+  trendAverage,
   trendValue,
   type MemberSeasonRow,
   type TrendMetric,
@@ -71,6 +73,10 @@ function MemberChips(props: { members: Member[]; focus: FocusEntry[]; onToggle: 
   return (
     <div className="chips-wrap">
       <div className="chips" role="group" aria-label="グラフで強調するメンバー">
+        <span className="chip legend-avg" title="点線: メンバー平均">
+          <i className="key" />
+          平均
+        </span>
         {props.members.map((m) => {
           const slot = slotOf(props.focus, m.id);
           return (
@@ -90,7 +96,7 @@ function MemberChips(props: { members: Member[]; focus: FocusEntry[]; onToggle: 
       </div>
       <div className="chips-foot">
         <span>
-          強調 {props.focus.length} / {MAX_FOCUS}（ほかは灰色の線）
+          強調 {props.focus.length} / {MAX_FOCUS} · 点線はメンバー平均
         </span>
         {props.focus.length > 0 && (
           <button type="button" className="lnk" onClick={props.onClear}>
@@ -125,6 +131,14 @@ export function StatsScreen(props: {
   const recs = recordsInRange(data.records, range.start, range.end);
   const club = summarize(recs);
   const rows = seasonRows(data, season);
+  // メンバー平均（そのシーズンに 1 回以上参加した人で割る）。
+  const players = rows.filter((r) => r.sum.n > 0);
+  const survs = players.map((r) => r.survival).filter((v): v is number => v != null);
+  const avgRow = {
+    total: players.length ? club.total / players.length : null,
+    n: players.length ? club.n / players.length : null,
+    survival: survs.length ? survs.reduce((a, b) => a + b, 0) / survs.length : null,
+  };
   const axis = seasonAxis(data, season);
 
   const sorted = [...rows].sort((a, b) => {
@@ -143,7 +157,9 @@ export function StatsScreen(props: {
     setSort((s) => (s.key === key ? { key, desc: !s.desc } : { key, desc: true }));
   }
 
-  const seasonSeries: LineSeries[] = rows.map((r) => ({
+  type Row = Omit<LineSeries, 'slot'> & { slot: number | null };
+  const onlyFocused = (xs: Row[]): LineSeries[] => xs.filter((x): x is LineSeries => x.slot != null);
+  const seasonSeries: Row[] = rows.map((r) => ({
     id: r.member.id,
     name: r.member.name,
     values: seasonCumulative(data, season, r.member.id, today),
@@ -153,13 +169,19 @@ export function StatsScreen(props: {
   // シーズン推移: 古い順に並べ、記録がある・有効なメンバーを出す。
   const asc = [...props.seasons].sort((a, b) => a - b);
   const trendMembers = data.members.filter((m) => !m.archived || data.records.some((r) => r.memberId === m.id));
-  const trendSeries: LineSeries[] = trendMembers.map((m) => ({
+  const trendSeries: Row[] = trendMembers.map((m) => ({
     id: m.id,
     name: m.name,
     values: asc.map((no) => trendValue(data, no, m.id, metric)),
     slot: slotOf(props.focus, m.id),
   }));
   const metricInfo = TREND_METRICS.find((t) => t.key === metric)!;
+  const trendAvg = trendAverage(
+    data,
+    asc,
+    trendMembers.map((m) => m.id),
+    metric,
+  );
 
   return (
     <div className="pane wide">
@@ -210,7 +232,8 @@ export function StatsScreen(props: {
             </div>
             <LineChart
               labels={axis.map(md)}
-              series={seasonSeries}
+              series={onlyFocused(seasonSeries)}
+              average={seasonAverage(data, season, today)}
               format={(v) => fmtPt(Math.round(v))}
               zero
               ariaLabel={`S${season} の累積ポイント推移`}
@@ -223,7 +246,7 @@ export function StatsScreen(props: {
               <b>メンバー別</b>
               <span className="rt">見出しで並べ替え · 行で詳細</span>
             </div>
-            <div className="tbl-scroll">
+            <div className="tbl-scroll fixed">
               <table className="tbl stats">
                 <thead>
                   <tr>
@@ -243,6 +266,21 @@ export function StatsScreen(props: {
                   </tr>
                 </thead>
                 <tbody>
+                  <tr className="avg-row">
+                    <td>
+                      <span className="nmcell legend-avg">
+                        <i className="key" />
+                        メンバー平均
+                      </span>
+                    </td>
+                    <td>{avgRow.total == null ? '—' : avgRow.total.toFixed(1)}</td>
+                    <td>{fmtNum(club.avg)}</td>
+                    <td>{fmtRate(club.plusRate)}</td>
+                    <td>{fmtRate(club.winRate)}</td>
+                    <td>{fmtNum(club.avgRank)}</td>
+                    <td>{fmtNum(avgRow.n, 1)}</td>
+                    <td>{fmtNum(avgRow.survival, 1)}</td>
+                  </tr>
                   {sorted.map((r) => {
                     const slot = slotOf(props.focus, r.member.id);
                     return (
@@ -292,7 +330,8 @@ export function StatsScreen(props: {
             </div>
             <LineChart
               labels={asc.map((no) => `S${no}`)}
-              series={trendSeries}
+              series={onlyFocused(trendSeries)}
+              average={trendAvg}
               format={(v) => fmtMetric(metric, v)}
               zero={metric === 'total' || metric === 'avg'}
               tickFormat={(v) => (metric === 'total' ? fmtPt(Math.round(v)) : metric === 'plusRate' || metric === 'winRate' ? `${v.toFixed(0)}%` : String(Number(v.toFixed(1))))}
@@ -309,7 +348,7 @@ export function StatsScreen(props: {
               <b>{metricInfo.label}（表）</b>
               <span className="rt">{metricInfo.unit}</span>
             </div>
-            <div className="tbl-scroll">
+            <div className="tbl-scroll fixed">
               <table className="tbl stats">
                 <thead>
                   <tr>
@@ -320,6 +359,17 @@ export function StatsScreen(props: {
                   </tr>
                 </thead>
                 <tbody>
+                  <tr className="avg-row">
+                    <td>
+                      <span className="nmcell legend-avg">
+                        <i className="key" />
+                        メンバー平均
+                      </span>
+                    </td>
+                    {[...trendAvg].reverse().map((v, i) => (
+                      <td key={i}>{v == null ? '—' : fmtMetric(metric, v)}</td>
+                    ))}
+                  </tr>
                   {trendSeries.map((s) => (
                     <tr key={s.id} className="clk" onClick={() => setDetail(trendMembers.find((m) => m.id === s.id) ?? null)}>
                       <td>

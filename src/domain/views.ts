@@ -107,3 +107,30 @@ export function seasonsOfMember(data: AppData, memberId: string): number[] {
   }
   return [...set].sort((a, b) => a - b);
 }
+
+/** 値の平均（null は除く。全部 null なら null）。 */
+function meanOf(vs: readonly (number | null)[]): number | null {
+  const xs = vs.filter((v): v is number => v != null);
+  return xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
+}
+
+/**
+ * 累積ポイントのメンバー平均（その日までのクラブ合計 ÷ そのシーズンに 1 回以上参加したメンバー数）。
+ * 参加者がいなければ空配列。
+ */
+export function seasonAverage(data: AppData, no: number, today: string): (number | null)[] {
+  const ids = seasonRows(data, no)
+    .filter((r) => r.sum.n > 0)
+    .map((r) => r.member.id);
+  if (ids.length === 0) return [];
+  const series = ids.map((id) => seasonCumulative(data, no, id, today));
+  return seasonAxis(data, no).map((_, i) => {
+    const vs = series.map((s) => s[i] ?? null);
+    return vs.every((v) => v == null) ? null : meanOf(vs.map((v) => v ?? 0));
+  });
+}
+
+/** シーズン推移のメンバー平均（そのシーズンに値のあるメンバーの平均）。 */
+export function trendAverage(data: AppData, seasons: readonly number[], memberIds: readonly string[], metric: TrendMetric): (number | null)[] {
+  return seasons.map((no) => meanOf(memberIds.map((id) => trendValue(data, no, id, metric))));
+}

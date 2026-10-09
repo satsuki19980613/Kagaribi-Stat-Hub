@@ -1,7 +1,7 @@
 /**
  * デモ用のサンプルデータ（`npm run build:demo` のときだけ使う）。
  *
- * S31〜S33 の 3 シーズンぶんを、決まった乱数の種から毎回同じに作る。
+ * 有効メンバー 20 人（上限いっぱい）+ アーカイブ 1 人で、S31〜S33 の 3 シーズンぶんを、決まった乱数の種から毎回同じに作る。
  * 「今日」は DEMO_TODAY（S33 の途中）として扱う。
  * さつきの S31 序盤（10/3 1位・10/6 1位・10/8 5位）とスタッツ（参加 79・優勝 20・VPIP 28%・参加ハンド 1377）は実際の画面の値。
  */
@@ -38,6 +38,15 @@ const PROFILES: Profile[] = [
   { name: 'つむぎ', skill: -0.2, attend: 0.7, vpip: 35, survival: 49, base: 8, statDays: ['2026-12-15'] },
   { name: 'みお', skill: -0.15, attend: 0.5, vpip: 29, survival: 53, base: 45, statDays: [] },
   { name: 'れん', skill: 0.2, attend: 0.85, vpip: 27, survival: 60, base: 0, statDays: ['2026-12-15'], joined: '2026-12-01' },
+  { name: 'ゆうひ', skill: 0.3, attend: 0.75, vpip: 25, survival: 64, base: 150, statDays: ['2026-10-31', '2026-12-15'] },
+  { name: 'なぎ', skill: -0.25, attend: 0.6, vpip: 38, survival: 45, base: 22, statDays: ['2026-11-28'] },
+  { name: 'そら', skill: 0.05, attend: 0.9, vpip: 30, survival: 56, base: 88, statDays: ['2026-10-31', '2026-11-28', '2026-12-15'] },
+  { name: 'ひなた', skill: 0.1, attend: 0.65, vpip: 27, survival: 59, base: 64, statDays: [] },
+  { name: 'いろは', skill: -0.05, attend: 0.8, vpip: 33, survival: 52, base: 40, statDays: ['2026-11-28'] },
+  { name: 'あおい', skill: 0.2, attend: 0.55, vpip: 24, survival: 67, base: 175, statDays: ['2026-10-31'] },
+  { name: 'まひろ', skill: -0.3, attend: 0.7, vpip: 41, survival: 42, base: 12, statDays: ['2026-12-15'] },
+  { name: 'かえで', skill: 0.0, attend: 0.6, vpip: 29, survival: 57, base: 70, statDays: ['2026-11-28'] },
+  { name: 'ことね', skill: 0.15, attend: 0.7, vpip: 26, survival: 61, base: 0, statDays: ['2026-12-15'], joined: '2026-11-03' },
   { name: 'ゆずは', skill: -0.1, attend: 0.6, vpip: 32, survival: 50, base: 52, statDays: ['2026-10-31'], left: '2026-11-14' },
 ];
 

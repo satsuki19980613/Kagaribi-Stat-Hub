@@ -51,3 +51,14 @@ describe('シーズン推移', () => {
     expect(trendValue(data, 32, 'a', 'survival')).toBeCloseTo(50);
   });
 });
+
+describe('メンバー平均', () => {
+  it('累積はその日までのクラブ合計 ÷ そのシーズンの参加者数', async () => {
+    const { seasonAverage, trendAverage } = await import('./views');
+    // S31 の参加者は a・b（2 人）。10/3: a=5,b=0 → 2.5 / 10/6: a=4 → 2 / 10/7: b=3 → 3.5
+    const avg = seasonAverage(data, 31, '2026-10-31');
+    expect(avg.slice(0, 3)).toEqual([2.5, 2, 3.5]);
+    // 推移の平均は値のあるメンバーだけで割る（S32 は a だけ）
+    expect(trendAverage(data, [31, 32], ['a', 'b', 'c'], 'total')).toEqual([3.5, 2]);
+  });
+});

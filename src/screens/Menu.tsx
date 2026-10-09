@@ -1,3 +1,4 @@
+import type { FileStatus } from '../data/autoBackup';
 import { shortDate } from '../domain/date';
 import type { AppData } from '../domain/model';
 import { MAX_ACTIVE_MEMBERS } from '../domain/model';
@@ -7,6 +8,8 @@ import { recordsInRange, summarize } from '../domain/stats';
 
 /** メニュー（ルート）。記録・メンバー情報登録・スタッツビューの 3 つと、補助の操作。 */
 export function Menu(props: {
+  fileStatus: FileStatus;
+  onResumeFile: () => void;
   demo: boolean;
   onResetDemo: () => void;
   data: AppData;
@@ -36,6 +39,14 @@ export function Menu(props: {
           <b>DEMO</b> サンプルデータ入りのデモ版です。今日を {shortDate(today)} として表示しています。自由に触って大丈夫です。
           <button type="button" className="lnk" onClick={props.onResetDemo}>
             サンプルに戻す
+          </button>
+        </div>
+      )}
+      {(props.fileStatus.state === 'needs-permission' || props.fileStatus.state === 'error') && (
+        <div className="notice warn demo-note">
+          ファイルへの自動保存が止まっています（{props.fileStatus.name}）。
+          <button type="button" className="btn sm primary" onClick={props.onResumeFile}>
+            再開
           </button>
         </div>
       )}
