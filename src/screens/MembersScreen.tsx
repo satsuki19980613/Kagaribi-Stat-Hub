@@ -49,7 +49,7 @@ export function MembersScreen(props: {
                 <span className="hs-unit">ターン</span>
               </>
             ) : (
-              <span className="muted">生存ターン —</span>
+              <span className="muted">生存T 未入力</span>
             )}
           </span>
           <span className="rec-sub">
@@ -234,9 +234,9 @@ function MemberModal(props: {
       </p>
       {last && (
         <p className="hint">
-          前回（{longDate(last.date)}）: 参加 {last.matches}回{last.wins != null && ` · 優勝 ${last.wins}回`}
-          {last.vpip != null && ` · VPIP ${last.vpip}%`}
-          {last.hands != null && ` · 参加ハンド ${last.hands}`}
+          前回（{longDate(last.date)}）: <span className="nw">参加 {last.matches}回</span>{last.wins != null && ` · 優勝 ${last.wins}回`}
+          {last.vpip != null && ` · VPIP ${last.vpip}%`}
+          {last.hands != null && ` · 参加ハンド ${last.hands}`}
         </p>
       )}
       <div className="fgrid three">

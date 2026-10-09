@@ -563,3 +563,19 @@ p,.hint,.notice,small,.mbtn small{text-wrap:pretty}
   .season-tag{font-size:22px}
   .demo-note{padding:8px 12px}
 }
+@media (pointer:coarse){.subrow .btn{min-height:36px}}
+.rec-main{padding-right:10px}
+.day-h{min-height:36px;align-items:center}
+.cal-key{vertical-align:-1px}
+.cal-key.has{vertical-align:1px}
+/* ヘッダの左右を本文の余白（16px）にそろえる */
+.top{padding-left:clamp(16px,3vw,32px);padding-right:clamp(16px,3vw,32px)}
+/* メニュー上のまとめは 3 つ横並び（ごく狭い画面だけ 2 列） */
+.hero .hs-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.hero .hs-grid>.hs-stat:nth-child(3):last-child{grid-column:auto}
+@media (max-width:359px){.hero .hs-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hero .hs-grid>.hs-stat:nth-child(3):last-child{grid-column:1/-1}}
+/* モーダル内の表は、モーダルの左右余白（狭い画面は 16px）に合わせて端まで */
+@media (max-width:420px){
+  .gd-scroll .tbl-scroll{margin:0 -16px;padding:0 16px}
+  .gd-scroll .tbl.stats th:first-child,.gd-scroll .tbl.stats td:first-child{left:-16px;padding-left:16px}
+}

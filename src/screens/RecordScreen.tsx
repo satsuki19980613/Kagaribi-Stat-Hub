@@ -324,7 +324,7 @@ function StatDrawer(props: {
           <span className="warn-t">{props.issues[0]}</span>
         ) : (
           <>
-            空欄のままで大丈夫です（薄い数字は前回の値）。参加 {matches} 回として残します
+            空欄のままで大丈夫です（薄い数字は前回の値）。<span className="nw">参加 {matches} 回として</span>残します
             {surv != null && Number.isFinite(surv) && (
               <>
                 {' '}

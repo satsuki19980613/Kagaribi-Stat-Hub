@@ -85,8 +85,8 @@ export function BackupModal(props: {
         </span>
       </h3>
       <p className="hint">
-        記録・メンバー・シーズン設定を変えるたびに、自動でコピーを残します（直近 30 件と、それより前は 1 日 1 件を 60 日ぶん）。
-        間違えて消したときは、1 つ前の時点に戻せば取り消せます。
+        記録・メンバー・シーズン設定を変えるたびに、自動でコピーを残します（直近 30 件と、それより前は 1 日 1 件を 60 日ぶん）。
+        間違えて消したときは、1 つ前の時点に戻せば取り消せます。
       </p>
       {history == null ? (
         <p className="hint">読み込み中…</p>
@@ -130,7 +130,7 @@ export function BackupModal(props: {
         <>
           <p className="hint">
             選んだファイルへ、変更のたびに自動で書き出します。ブラウザのデータが消えても、このファイルを「読み込む」で戻せます。
-            ブラウザを開き直したときは、メニューに出る「再開」を 1 回押してください（ブラウザの決まりです）。
+            ブラウザを開き直したときは、メニューに出る「再開」を 1 回押してください（ブラウザの決まりです）。
           </p>
           {file.state === 'off' && (
             <button type="button" className="btn wide primary" disabled={busy} onClick={() => void act(props.onChooseFile)}>
