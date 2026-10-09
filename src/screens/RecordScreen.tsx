@@ -6,7 +6,7 @@ import { EMPTY_STAT_TEXT, isBlankStat, readNum, type StatText } from '../domain/
 import { latestSnapshot, survivalOf } from '../domain/stats';
 import { RANKS, fmtPt, pointsOf } from '../domain/points';
 import { isMatchDay, seasonOf } from '../domain/season';
-import { Back, ConfirmDialog, PaneHead } from '../components/ui';
+import { Back, ConfirmDialog, InfoButton, InfoList, PaneHead } from '../components/ui';
 
 export interface Entry {
   date: string;
@@ -85,6 +85,18 @@ export function RecordScreen(props: {
     <div className="pane rec-pane">
       <Back label="MENU" onClick={props.onBack} />
       <PaneHead eyebrow="RECORD" title="記録">
+        <InfoButton title="記録のしかた">
+          <InfoList
+            items={[
+              ['順位', '参加したメンバーの順位（1〜6位）を押します。記録した人が参加、押さない人は不参加です。同じ順位をもう一度押すと取り消せます。'],
+              ['ポイント', '1位 +5 · 2位 +3 · 3位 +2 · 4位 +1 · 5位 ±0 · 6位 −1'],
+              ['1部 · 2部', 'どちらに出たかを残せます（任意）。'],
+              ['スタッツ', '「＋ スタッツ」から優勝回数・VPIP・参加ハンド数を入れられます（任意）。空欄のままで大丈夫で、薄い数字は前回の値です。入れた値はその日の値として残り、参加回数はその日までの自動の数になります。'],
+              ['修正', '1 人 1 日 1 件です。記録のある日を開くとその内容が入っているので、そのまま直して保存します。'],
+            ]}
+          />
+          <p>◀ ▶ で前後の開催日へ移れます。</p>
+        </InfoButton>
         <button type="button" className="btn sm ghost" onClick={props.onHistory}>
           記録履歴
         </button>
@@ -129,7 +141,7 @@ export function RecordScreen(props: {
       ) : (
         <>
           <div className="list-h">
-            <span className="eyebrow">MEMBERS · タップで順位</span>
+            <span className="eyebrow">MEMBERS</span>
             <span className="rt">
               {entered.length}人 · {fmtPt(dayTotal)}pt
             </span>
@@ -324,7 +336,7 @@ function StatDrawer(props: {
           <span className="warn-t">{props.issues[0]}</span>
         ) : (
           <>
-            空欄のままで大丈夫です（薄い数字は前回の値）。<span className="nw">参加 {matches} 回として</span>残します
+            <span className="nw">参加 {matches} 回</span>として残します
             {surv != null && Number.isFinite(surv) && (
               <>
                 {' '}

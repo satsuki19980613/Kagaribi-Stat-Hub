@@ -16,6 +16,8 @@ export interface LineSeries {
   values: (number | null)[];
   /** 0〜7 の系列色。 */
   slot: number;
+  /** 系列色の代わりに付けるクラス（例: 自クラブの own）。 */
+  tone?: string;
 }
 
 const AVG_ID = '__avg';
@@ -81,6 +83,8 @@ export function LineChart(props: {
   markers?: boolean;
   /** メンバー平均（点線で描く）。 */
   average?: (number | null)[];
+  /** 点線の名前（ツールチップ・右端）。省略時はメンバー平均。 */
+  averageLabel?: { name: string; short: string };
   ariaLabel: string;
   empty?: string;
 }): JSX.Element {
@@ -89,10 +93,12 @@ export function LineChart(props: {
   const [box, W] = useWidth<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
   const avg = props.average;
-  const lines: { id: string; name: string; values: (number | null)[]; slot: number | null }[] = [
-    ...(avg ? [{ id: AVG_ID, name: AVG_NAME, values: avg, slot: null }] : []),
+  const avgName = props.averageLabel ?? { name: AVG_NAME, short: '平均' };
+  const lines: { id: string; name: string; values: (number | null)[]; slot: number | null; tone?: string }[] = [
+    ...(avg ? [{ id: AVG_ID, name: avgName.name, values: avg, slot: null }] : []),
     ...series,
   ];
+  const cls = (s: { slot: number | null; tone?: string }): string => s.tone ?? (s.slot == null ? 'avg' : `s${s.slot + 1}`);
   const direct = lines.length > 0 && lines.length <= 5;
   // 名前ラベルの分の余白は、線が右端の近くまで伸びているときだけ取る（シーズン途中は右が空くので不要）。
   const nLabels = labels.length;
@@ -186,7 +192,7 @@ export function LineChart(props: {
             ) : null,
           )}
           {lines.map((s) => (
-            <g key={s.id} className={s.slot == null ? 'avg' : `s${s.slot + 1}`}>
+            <g key={s.id} className={cls(s)}>
               <path className="ln" d={path(s.values)} />
               {s.values.map((v, i) => {
                 if (v == null) return null;
@@ -195,7 +201,7 @@ export function LineChart(props: {
               })}
               {direct && labelY.has(s.id) && (
                 <text className="dl" x={x(lastIdx(s.values)) + 8} y={labelY.get(s.id)} dy="0.32em">
-                  {s.slot == null ? '平均' : s.name.length > 6 ? `${s.name.slice(0, 6)}…` : s.name}
+                  {s.slot == null ? avgName.short : s.name.length > 6 ? `${s.name.slice(0, 6)}…` : s.name}
                 </text>
               )}
             </g>
@@ -221,7 +227,7 @@ export function LineChart(props: {
           <b className="tip-h">{labels[hover!]}</b>
           {tip.length === 0 && <span className="tip-r muted">記録なし</span>}
           {tip.map(({ s, v }) => (
-            <span key={s.id} className={`tip-r ${s.slot == null ? 'avg' : `s${s.slot + 1}`}`}>
+            <span key={s.id} className={`tip-r ${cls(s)}`}>
               <i className="key" />
               <b>{format(v)}</b>
               <span>{s.name}</span>

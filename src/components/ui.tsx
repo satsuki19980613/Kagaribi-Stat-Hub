@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useBackLayer } from './BackLayer';
 
 /** 炎のマーク（アプリアイコンと同じ形）。 */
@@ -7,17 +7,17 @@ export function FlameMark(): JSX.Element {
     <svg viewBox="10 6 80 86" aria-hidden="true">
       <defs>
         <linearGradient id="kg-fo" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#FFB300" />
-          <stop offset=".55" stopColor="#FF8F00" />
-          <stop offset="1" stopColor="#F4511E" />
+          <stop offset="0" stopColor="#F48FB1" />
+          <stop offset=".55" stopColor="#EC407A" />
+          <stop offset="1" stopColor="#C2185B" />
         </linearGradient>
         <linearGradient id="kg-fm" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#FFCA28" />
-          <stop offset="1" stopColor="#FFA000" />
+          <stop offset="0" stopColor="#F8BBD0" />
+          <stop offset="1" stopColor="#F06292" />
         </linearGradient>
         <linearGradient id="kg-fi" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#FFF8E1" />
-          <stop offset="1" stopColor="#FFE082" />
+          <stop offset="0" stopColor="#FFF7FA" />
+          <stop offset="1" stopColor="#FCD5E3" />
         </linearGradient>
       </defs>
       <path d="M50 10C57 25 74 33 74 57C74 74 63 88 50 88C37 88 26 74 26 59C26 47 32 39 38 33C38 41 41 46 46 48C43 35 46 21 50 10Z" fill="url(#kg-fo)" />
@@ -56,12 +56,14 @@ export function Back(props: { label?: string; onClick: () => void }): JSX.Elemen
   );
 }
 
-/** pane の見出し（eyebrow + 和文タイトル + 右端の操作）。 */
+/** pane の見出し（eyebrow のタグを和文タイトルの箱に乗せる + 右端の操作）。 */
 export function PaneHead(props: { eyebrow: string; title: string; children?: ReactNode }): JSX.Element {
   return (
     <div className="pane-h">
-      <span className="eyebrow">{props.eyebrow}</span>
-      <b>{props.title}</b>
+      <span className="ph-t">
+        <span className="eyebrow">{props.eyebrow}</span>
+        <b>{props.title}</b>
+      </span>
       {props.children && <span className="acts">{props.children}</span>}
     </div>
   );
@@ -152,5 +154,51 @@ export function ConfirmDialog(props: {
     >
       {props.body && <p>{props.body}</p>}
     </Modal>
+  );
+}
+
+/**
+ * インフォメーションマーク。画面に小さな説明文を並べる代わりに、押すと説明のモーダルを開く。
+ * 中身は短い段落・用語と意味の組（InfoList）で、読みやすく書く。
+ */
+export function InfoButton(props: { title: string; children: ReactNode }): JSX.Element {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        type="button"
+        className="info-btn"
+        aria-label={`${props.title}の説明`}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen(true);
+        }}
+      >
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <circle cx="10" cy="10" r="8.6" fill="none" stroke="currentColor" strokeWidth="1.6" />
+          <circle cx="10" cy="6.2" r="1.25" fill="currentColor" />
+          <path d="M10 9v5.6" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+        </svg>
+      </button>
+      {open && (
+        <Modal eyebrow="INFO" title={props.title} size="sm" onClose={() => setOpen(false)}>
+          <div className="info">{props.children}</div>
+        </Modal>
+      )}
+    </>
+  );
+}
+
+/** 説明モーダルの中の「用語 — 意味」の並び。 */
+export function InfoList(props: { items: [ReactNode, ReactNode][] }): JSX.Element {
+  return (
+    <dl className="info-dl">
+      {props.items.map(([k, v], i) => (
+        <div key={i}>
+          <dt>{k}</dt>
+          <dd>{v}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }

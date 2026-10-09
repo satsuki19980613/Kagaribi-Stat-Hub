@@ -13,6 +13,7 @@ import { currentSeason, seasonList } from './domain/season';
 import { baseForCount } from './domain/stats';
 import { seasonRows } from './domain/views';
 import * as autoBackup from './data/autoBackup';
+import { fetchClub, loadCachedClub, type ClubState } from './data/clubData';
 import type { FileStatus } from './data/autoBackup';
 import * as store from './data/store';
 import { BackupModal } from './screens/BackupModal';
@@ -26,7 +27,8 @@ import { StatsScreen } from './screens/StatsScreen';
 type Screen = 'menu' | 'record' | 'history' | 'members' | 'stats' | 'seasons';
 type Tab = 'record' | 'members' | 'stats';
 
-const THEME_KEY = 'kg-theme';
+/** 前の版がテーマを覚えていたキー。今は起動のたびにライトで始めるので、起動時に消す。 */
+const OLD_THEME_KEY = 'kg-theme';
 const FOCUS_KEY = 'ksh-focus';
 const EMPTY: AppData = { members: [], records: [], snapshots: [], seasons: [] };
 
@@ -58,6 +60,9 @@ export function App(): JSX.Element {
   const [fileStatus, setFileStatus] = useState<FileStatus>({ state: 'unsupported' });
   const [persisted, setPersisted] = useState<boolean | null>(null);
   const backupTimer = useRef<number | undefined>(undefined);
+  const [club, setClub] = useState<ClubState>({ data: null, checkedAt: null, error: null });
+  const clubRef = useRef(club);
+  clubRef.current = club;
   const [toast, setToast] = useState<ToastState | null>(null);
   const closeToast = useCallback(() => setToast(null), []);
 
@@ -109,6 +114,14 @@ export function App(): JSX.Element {
     }
   }
 
+  useEffect(() => {
+    try {
+      localStorage.removeItem(OLD_THEME_KEY);
+    } catch {
+      /* noop */
+    }
+  }, []);
+
   // 起動: 全件読み込み、注目メンバーを復元（初回はそのシーズンの上位 3 人）。
   useEffect(() => {
     void (async () => {
@@ -158,6 +171,37 @@ export function App(): JSX.Element {
         setLoaded(true);
       }
     })();
+  }, []);
+
+  // クラブ順位: 端末に残した前回分をすぐ出し、ネットにつながっていれば読み直す。
+  // つながったとき・画面に戻ってきたとき（前回から 10 分以上たっていれば）にも読み直す。
+  useEffect(() => {
+    let busy = false;
+    const refresh = async (): Promise<void> => {
+      if (busy || !navigator.onLine) return;
+      busy = true;
+      try {
+        setClub(await fetchClub(clubRef.current));
+      } finally {
+        busy = false;
+      }
+    };
+    const onVisible = (): void => {
+      if (document.visibilityState !== 'visible') return;
+      const at = clubRef.current.checkedAt;
+      if (at == null || Date.now() - at > 10 * 60 * 1000) void refresh();
+    };
+    void loadCachedClub().then((c) => {
+      setClub(c);
+      clubRef.current = c;
+      void refresh();
+    });
+    window.addEventListener('online', refresh);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      window.removeEventListener('online', refresh);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, []);
 
   useEffect(() => {
@@ -331,14 +375,9 @@ export function App(): JSX.Element {
 
   function toggleTheme(e: React.MouseEvent<HTMLButtonElement>): void {
     const r = document.documentElement;
-    const cur = r.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    const next = cur === 'dark' ? 'light' : 'dark';
+    // 起動のたびにライトで始める（端末のダーク設定にも、前回の切り替えにも合わせない）。ダークはこの画面を開いている間だけ。
+    const next = r.dataset.theme === 'dark' ? 'light' : 'dark';
     r.dataset.theme = next;
-    try {
-      localStorage.setItem(THEME_KEY, next);
-    } catch {
-      /* noop */
-    }
     if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
       e.currentTarget.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(180deg)' }], {
         duration: 500,
@@ -464,6 +503,7 @@ export function App(): JSX.Element {
               {screen === 'stats' && (
                 <StatsScreen
                   data={data}
+                  club={club}
                   today={today}
                   seasons={seasons}
                   season={season}

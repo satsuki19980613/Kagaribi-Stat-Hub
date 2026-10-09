@@ -1,3 +1,4 @@
+import { InfoButton, InfoList } from '../components/ui';
 import type { FileStatus } from '../data/autoBackup';
 import { shortDate } from '../domain/date';
 import type { AppData } from '../domain/model';
@@ -90,7 +91,22 @@ export function Menu(props: {
       </div>
 
       <div className="list-h">
-        <span className="eyebrow">MENU</span>
+        <span className="pt">
+          <span className="eyebrow">MENU</span>
+          <InfoButton title="このアプリについて">
+            <p>クラブ「燎」のクラブマッチの戦績を記録・集計するアプリです。</p>
+            <InfoList
+              items={[
+                ['記録', '開催日にメンバーの順位を入れます。記録した人が参加、記録しなければ不参加です。'],
+                ['メンバー情報登録', 'プレイヤー名・参加回数・基本スタッツ（任意）。有効メンバーは最大 20 人です。'],
+                ['スタッツビュー', 'シーズン内の得点推移・加点率・1位率・平均順位・生存ターン数と、シーズンごとの推移。'],
+                ['保存', '記録はこの端末のブラウザの中に保存され、どこにも送りません。変更のたびに自動でバックアップを残します。'],
+                ['クラブ順位', '上位 30 クラブの順位は、ネットにつながったときに自動で読み込みます。'],
+              ]}
+            />
+            <p>機種変更などで移すときは「バックアップ」→「書き出す」でファイルに保存してください。</p>
+          </InfoButton>
+        </span>
         <span className="rt">{shortDate(today)}</span>
       </div>
       <button type="button" className="mbtn hot" onClick={props.onRecord}>
@@ -128,7 +144,6 @@ export function Menu(props: {
           バックアップ
         </button>
       </div>
-      <p className="hint menu-note">記録はこの端末のブラウザに保存され、変更のたびに自動でバックアップされます。</p>
     </div>
   );
 }

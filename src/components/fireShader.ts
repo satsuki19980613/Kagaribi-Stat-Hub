@@ -103,15 +103,16 @@ void main(){
              * smoothstep(0.45, 0.8, yn) * (1.0 - smoothstep(0.85, 1.2, y / H));
   heat = max(heat, wisp * 0.4);
 
-  // 温度: 根元の中央ほど高温（白黄）。煤が昇りながら冷えるので、上ほど橙 → 赤へ落ちていく。
+  // 温度: 根元の中央ほど高温（白）。昇りながら冷えるので、上ほど色が濃くなっていく。
   float core = (1.0 - smoothstep(0.0, 0.65, sx)) * (1.0 - smoothstep(0.0, 0.42, yn));
   float temp = clamp(heat * (0.7 + 0.3 * core) * (1.0 - 0.32 * yn) + fine * 0.14 * heat, 0.0, 1.0);
 
-  vec3 c0 = vec3(0.30, 0.03, 0.01);
-  vec3 c1 = vec3(0.85, 0.16, 0.02);
-  vec3 c2 = vec3(1.00, 0.42, 0.05);
-  vec3 c3 = vec3(1.00, 0.70, 0.22);
-  vec3 c4 = vec3(1.00, 0.93, 0.70);
+  // 色はピンク系: 根元の芯は白に近い桜色、上へ行くほどローズ → 濃いベリーへ落ちていく。
+  vec3 c0 = vec3(0.34, 0.03, 0.17);
+  vec3 c1 = vec3(0.90, 0.20, 0.50);
+  vec3 c2 = vec3(1.00, 0.44, 0.69);
+  vec3 c3 = vec3(1.00, 0.72, 0.86);
+  vec3 c4 = vec3(1.00, 0.94, 0.97);
   vec3 col = mix(c0, c1, smoothstep(0.0, 0.25, temp));
   col = mix(col, c2, smoothstep(0.2, 0.5, temp));
   col = mix(col, c3, smoothstep(0.5, 0.78, temp));
