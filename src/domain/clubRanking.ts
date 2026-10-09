@@ -22,8 +22,8 @@ export interface ClubEntry {
   name: string;
   /** そのシーズンの累計。 */
   total: number;
-  /** その節の得点。 */
-  gain: number;
+  /** その節の得点。圏外から入ったクラブはポストに書かれないので null。 */
+  gain: number | null;
 }
 
 export interface ClubRound {
@@ -46,57 +46,91 @@ export function emptyClubData(): ClubData {
 
 const toHalf = (s: string): string => s.replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0));
 
-// 「1(1) 138 +50 🥇 名前」。前節は (-) (NEW) (圏外) なども許す。
-const LINE = /^\s*(\d+)\s*[(（]\s*([^)）]*)\s*[)）]\s*(-?\d+)\s*(?:pt|Pt|PT)?\s+([+＋\-−－±]\s*\d+)\s*(?:pt|Pt|PT)?\s*(.*)$/;
+// 第2節以降「1(1) 138 +50 🥇 名前」。前節は (外) (-) (NEW) なども許す。圏外から入ったクラブは得点が無い（「10(外) 76 名前」）。
+const LINE = /^\s*(\d+)\s*[(（]\s*([^)）]*)\s*[)）]\s*(-?\d+)\s*(?:pt|Pt|PT)?(?:\s+([+＋\-−－±]\s*\d+)\s*(?:pt|Pt|PT)?)?\s+(.*)$/;
+// 第1節「1 56 🥇【γ】」（前節も得点も無い。累計 = 得点）。
+const LINE1 = /^\s*(\d+)\s+(-?\d+)\s+(\S.*)$/;
 // 名前の前に付く記号（メダル・矢印など）。クラブ名の中の絵文字は消さない。
 const LEAD = /^(?:[\u{1F947}-\u{1F949}\u{1F3C5}\u{1F396}\u{1F451}\u{1F525}\u{2B06}\u{2B07}\u{2197}\u{2198}\u{27A1}\u{2191}\u{2193}\u{2934}\u{2935}\u{FE0F}↑↓→]\s*)+/u;
 const HEAD = /シーズン\s*(\d+)\s*第\s*(\d+)\s*節/;
 
-export interface ParsedRanking {
-  season: number | null;
-  round: number | null;
+export interface ParsedRound {
+  season: number;
+  round: number;
   clubs: ClubEntry[];
-  /** 読めなかった行のうち、順位の行に見えるもの。 */
-  skipped: string[];
 }
 
-/** X のポスト（スレッド全体をコピペしたもの）から順位を読む。関係ない行（名前・時刻・いいね数など）は無視する。 */
+export interface ParsedRanking {
+  rounds: ParsedRound[];
+  /** 見出しより前にあった順位の行・読めなかった行（順位の行に見えるもの）。 */
+  skipped: string[];
+  /** 同じ節に同じクラブが違う値で 2 回出てきたもの。 */
+  conflicts: string[];
+}
+
+function parseLine(line: string): ClubEntry | null {
+  const m = LINE.exec(line);
+  if (m) {
+    const prevText = m[2]!.trim();
+    const sign = m[4]?.replace(/\s/g, '');
+    const name = m[5]!.replace(LEAD, '').trim();
+    if (!name) return null;
+    let gain: number | null = null;
+    if (sign) {
+      const abs = Number(sign.slice(1));
+      gain = /^[-−－]/.test(sign) ? -abs : abs;
+    }
+    return { rank: Number(m[1]), prev: /^\d+$/.test(prevText) ? Number(prevText) : null, name, total: Number(m[3]), gain };
+  }
+  const m1 = LINE1.exec(line);
+  if (m1) {
+    const name = m1[3]!.replace(LEAD, '').trim();
+    if (!name) return null;
+    return { rank: Number(m1[1]), prev: null, name, total: Number(m1[2]), gain: null };
+  }
+  return null;
+}
+
+/**
+ * X のポスト（スレッドをまとめてコピペしたもの）から順位を読む。「シーズンN 第M節」の見出しごとに 1 節。
+ * 名前・時刻・閲覧数などの関係ない行は無視する。同じ節が 2 回貼られていれば（「おすすめ」などの重複）1 つにまとめる。
+ * 第1節は得点 = 累計。
+ */
 export function parseRankingText(text: string): ParsedRanking {
-  let season: number | null = null;
-  let round: number | null = null;
-  const clubs: ClubEntry[] = [];
+  const rounds: ParsedRound[] = [];
   const skipped: string[] = [];
+  const conflicts: string[] = [];
+  let cur: ParsedRound | null = null;
   for (const raw of text.split(/\r?\n/)) {
     const line = toHalf(raw.normalize('NFC')).trim();
     if (!line) continue;
     const h = HEAD.exec(line);
-    if (h && season == null) {
-      season = Number(h[1]);
-      round = Number(h[2]);
+    if (h) {
+      const season = Number(h[1]);
+      const round = Number(h[2]);
+      cur = rounds.find((r) => r.season === season && r.round === round) ?? null;
+      if (!cur) {
+        cur = { season, round, clubs: [] };
+        rounds.push(cur);
+      }
       continue;
     }
-    const m = LINE.exec(line);
-    if (!m) {
-      if (/^\d+\s*[(（]/.test(line)) skipped.push(raw.trim());
-      continue;
-    }
-    const prevText = m[2]!.trim();
-    const sign = m[4]!.replace(/\s/g, '');
-    const gainAbs = Number(sign.slice(1));
-    const name = m[5]!.replace(LEAD, '').trim();
-    if (!name) {
+    // 時刻（6:35 PM）・閲覧数（3,680）・日付（Oct 5）などは数字で始まっても順位の行の形にならない。
+    if (!/^\d+\s*[(（\s]/.test(line)) continue;
+    const e = parseLine(line);
+    if (!e || !cur) {
       skipped.push(raw.trim());
       continue;
     }
-    clubs.push({
-      rank: Number(m[1]),
-      prev: /^\d+$/.test(prevText) ? Number(prevText) : null,
-      name,
-      total: Number(m[3]),
-      gain: /^[-−－]/.test(sign) ? -gainAbs : gainAbs,
-    });
+    const entry: ClubEntry = { ...e, gain: e.gain ?? (cur.round === 1 ? e.total : null) };
+    const same = cur.clubs.find((c) => c.name === entry.name);
+    if (!same) cur.clubs.push(entry);
+    else if (same.rank !== entry.rank || same.total !== entry.total || same.gain !== entry.gain) {
+      conflicts.push(`S${cur.season} 第${cur.round}節 ${entry.name}: ${same.rank}位 ${same.total} と ${entry.rank}位 ${entry.total}`);
+    }
   }
-  return { season, round, clubs, skipped };
+  rounds.sort((a, b) => a.season - b.season || a.round - b.round);
+  return { rounds, skipped, conflicts };
 }
 
 /** 取り込む前の確認。errors があれば取り込まない。warnings は目で確かめる。 */
@@ -106,27 +140,19 @@ export function checkRound(data: ClubData, r: ClubRound): { errors: string[]; wa
   if (!Number.isInteger(r.season) || r.season < 1) errors.push('シーズンが読めません');
   if (!Number.isInteger(r.round) || r.round < 1) errors.push('節が読めません');
   if (r.clubs.length === 0) errors.push('順位の行がありません');
-  const ranks = r.clubs.map((c) => c.rank);
-  const dupRank = ranks.filter((x, i) => ranks.indexOf(x) !== i);
-  if (dupRank.length) errors.push(`同じ順位が 2 つあります: ${[...new Set(dupRank)].join(', ')}`);
   const names = r.clubs.map((c) => c.name);
   const dupName = names.filter((x, i) => names.indexOf(x) !== i);
   if (dupName.length) errors.push(`同じクラブが 2 回あります: ${[...new Set(dupName)].join(', ')}`);
-  if (r.clubs.length !== 30) warnings.push(`クラブ数が ${r.clubs.length} です（ふつうは 30）`);
-  const sorted = [...r.clubs].sort((a, b) => a.rank - b.rank);
-  sorted.forEach((c, i) => {
-    const next = sorted[i + 1];
-    if (next && next.total > c.total) warnings.push(`${c.rank}位 ${c.name}（${c.total}）より ${next.rank}位 ${next.name}（${next.total}）の累計が多い`);
-  });
-  const max = Math.max(0, ...ranks);
-  const missing: number[] = [];
-  for (let k = 1; k <= max; k += 1) if (!ranks.includes(k)) missing.push(k);
-  // 同点で順位が飛ぶ（1, 1, 3）のはありうるので警告だけ。
-  if (missing.length) warnings.push(`抜けている順位: ${missing.join(', ')}（同点なら問題なし）`);
+  // 同点は同じ順位（1, 1, 3）。順位 = 自分より累計の多いクラブの数 + 1 になっているか。
+  for (const c of r.clubs) {
+    const expect = 1 + r.clubs.filter((x) => x.total > c.total).length;
+    if (c.rank !== expect) warnings.push(`${c.name}: ${c.rank}位とあるが、累計 ${c.total} なら ${expect}位`);
+  }
+  if (r.clubs.length < 30) warnings.push(`クラブ数が ${r.clubs.length} です（30 より少ない。スレッドの続きが欠けていない？）`);
 
   const before = data.rounds.find((x) => x.season === r.season && x.round === r.round - 1);
   if (r.round === 1) {
-    for (const c of r.clubs) if (c.total !== c.gain) warnings.push(`第1節なのに累計と得点が違う: ${c.name}`);
+    for (const c of r.clubs) if (c.gain != null && c.total !== c.gain) warnings.push(`第1節なのに累計と得点が違う: ${c.name}`);
   } else if (before) {
     for (const c of r.clubs) {
       const p = before.clubs.find((x) => x.name === c.name);
@@ -134,8 +160,9 @@ export function checkRound(data: ClubData, r: ClubRound): { errors: string[]; wa
         if (c.prev != null) warnings.push(`${c.name}: 前節の順位 ${c.prev} とあるが、前節のデータにいない（名前の表記ゆれ？）`);
         continue;
       }
-      if (p.total + c.gain !== c.total) warnings.push(`${c.name}: 前節 ${p.total} + ${c.gain} ≠ ${c.total}`);
-      if (c.prev != null && c.prev !== p.rank) warnings.push(`${c.name}: 前節の順位が ${c.prev} とあるが、前節のデータでは ${p.rank} 位`);
+      if (c.gain != null && p.total + c.gain !== c.total) warnings.push(`${c.name}: 前節 ${p.total} + ${c.gain} ≠ ${c.total}`);
+      if (c.prev == null) warnings.push(`${c.name}: 圏外から入ったとあるが、前節のデータでは ${p.rank} 位`);
+      else if (c.prev !== p.rank) warnings.push(`${c.name}: 前節の順位が ${c.prev} とあるが、前節のデータでは ${p.rank} 位`);
     }
   } else {
     warnings.push(`前節（第${r.round - 1}節）のデータがないので、累計の突き合わせはしていません`);
@@ -162,7 +189,7 @@ export function parseClubData(raw: unknown): ClubData {
   const rounds = o.rounds.map((r, i) => {
     if (!r || !isInt(r.season) || !isInt(r.round) || !Array.isArray(r.clubs)) throw new Error(`rounds[${i}] の形が違います`);
     const clubs = r.clubs.map((c, j) => {
-      if (!c || !isInt(c.rank) || !isInt(c.total) || !isInt(c.gain) || typeof c.name !== 'string' || !(c.prev === null || isInt(c.prev))) {
+      if (!c || !isInt(c.rank) || !isInt(c.total) || !(c.gain === null || isInt(c.gain)) || typeof c.name !== 'string' || !(c.prev === null || isInt(c.prev))) {
         throw new Error(`rounds[${i}].clubs[${j}] の形が違います`);
       }
       return { rank: c.rank, prev: c.prev, name: c.name, total: c.total, gain: c.gain };

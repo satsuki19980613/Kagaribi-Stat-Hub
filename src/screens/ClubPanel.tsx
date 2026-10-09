@@ -22,7 +22,7 @@ function fmtAt(ms: number): string {
 }
 
 const fmtTotal = (v: number): string => String(Math.round(v));
-const fmtGain = (v: number): string => (v > 0 ? `+${v}` : v < 0 ? `−${-v}` : '±0');
+const fmtGain = (v: number | null): string => (v == null ? '—' : v > 0 ? `+${v}` : v < 0 ? `−${-v}` : '±0');
 
 /**
  * クラブ順位（上位 30）との比較。メンバーのグラフとは別のパネルにして、単位（クラブの累計）を混ぜない。
@@ -123,11 +123,13 @@ export function ClubPanel(props: { data: AppData; club: ClubState; season: numbe
                   >
                     <td>
                       {c.rank}
-                      <span className="mv">{c.prev == null ? 'new' : c.prev > c.rank ? '↑' : c.prev < c.rank ? '↓' : ''}</span>
+                      <span className="mv">{c.prev == null ? (latest.round > 1 ? 'new' : '') : c.prev > c.rank ? '↑' : c.prev < c.rank ? '↓' : ''}</span>
                     </td>
                     <td className="nm">{c.name}</td>
                     <td>{c.total}</td>
-                    <td className={c.gain > 0 ? 'gain' : c.gain < 0 ? 'loss' : ''}>{fmtGain(c.gain)}</td>
+                    <td className={c.gain == null ? 'muted' : c.gain > 0 ? 'gain' : c.gain < 0 ? 'loss' : ''} title={c.gain == null ? '圏外から入ったクラブ（得点はポストに無い）' : undefined}>
+                      {fmtGain(c.gain)}
+                    </td>
                   </tr>
                 );
               })}

@@ -41,6 +41,7 @@
   [.claude/skills/club-ranking](.claude/skills/club-ranking/SKILL.md) の手順で読み取り・前節との突き合わせ・push まで行います
   （手で行う場合は `npm run ranking -- --file <clubs.json> --in <貼り付けた文章.txt> --dry` で確認してから `--dry` を外す）
 - 燎は上位 30 に入った節は公式の値、圏外の節はアプリの記録の合計で線をつなぎます
+- `club-data/clubs.json` は最初に取り込んだぶん（S31 第1〜3節）です。データ用リポジトリができたら、そちらへ移します（以降の正本はデータ用リポジトリ）
 - 読み込み先は `VITE_CLUB_DATA_URL` で変えられます
 
 ### 指標の定義
