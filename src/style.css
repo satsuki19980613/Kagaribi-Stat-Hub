@@ -554,3 +554,12 @@ p,.hint,.notice,small,.mbtn small{text-wrap:pretty}
   .gd-foot .btns .btn{min-height:36px;font-size:14px}
   .tbl-scroll.fixed{max-height:calc(var(--app-h,100dvh) - 120px)}
 }
+/* 横スクロールする表は、固定の先頭列とほかの列を同じ不透明な面に載せる（モーダル内も） */
+.tbl-scroll{background:var(--face)}
+/* 高さの低い画面: メニュー上のまとめを詰めて、メニューのボタンを 1 画面目に入れる */
+@media (max-height:500px){
+  .hero{gap:6px;padding:10px 14px}
+  .hero .hs-grid{display:none}
+  .season-tag{font-size:22px}
+  .demo-note{padding:8px 12px}
+}
