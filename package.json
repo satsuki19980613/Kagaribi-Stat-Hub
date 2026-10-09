@@ -1,0 +1,35 @@
+{
+  "name": "kagaribi-stat-hub",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Kagaribi Stat Hub — ポーカーチェイスのクラブ「燎」のクラブマッチ戦績を管理するローカル Web アプリ",
+  "type": "module",
+  "scripts": {
+    "start": "npm run build && npm run preview",
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --open",
+    "build:demo": "tsc --noEmit && vite build --mode demo --outDir dist-demo",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "icons": "node scripts/gen-icons.mjs"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "@types/node": "^22.10.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.7.2",
+    "vite": "^5.4.11",
+    "vite-plugin-pwa": "^0.21.1",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
