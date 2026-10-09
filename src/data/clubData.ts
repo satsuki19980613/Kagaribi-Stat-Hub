@@ -1,5 +1,6 @@
 /**
- * クラブ順位（上位 30）の取り込み。データ用の公開リポジトリの clubs.json を、ネットにつながったときに読む。
+ * クラブ順位（上位 30）の取り込み。アプリと一緒に配る data/clubs.json（リポジトリの public/data/clubs.json）を、
+ * ネットにつながったときに読む。main に入るとアプリと一緒に配り直されるので、次に開いたときに新しい順位が届く。
  * 読めたものは端末（meta）に残すので、オフラインでも前回の内容を出せる。
  * デモ版はネットを使わず、サンプルを出す。
  */
@@ -8,8 +9,7 @@ import { DEMO } from '../clock';
 import { parseClubData, type ClubData } from '../domain/clubRanking';
 import { getMeta, setMeta } from './store';
 
-export const CLUB_DATA_URL =
-  (import.meta.env.VITE_CLUB_DATA_URL as string | undefined) ?? 'https://raw.githubusercontent.com/satsuki19980613/kagaribi-club-data/main/clubs.json';
+export const CLUB_DATA_URL = (import.meta.env.VITE_CLUB_DATA_URL as string | undefined) ?? `${import.meta.env.BASE_URL}data/clubs.json`;
 
 const KEY = 'clubData';
 const AT_KEY = 'clubDataAt';
