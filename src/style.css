@@ -469,3 +469,5 @@ button.brand{border:0;background:none;padding:0;color:inherit;cursor:pointer}
 .cal-key.on{background:var(--ink)}
 .cal-key.changed{box-shadow:inset 0 0 0 2px var(--cpu)}
 .cal-key.has{background:var(--you);width:6px;height:6px}
+.demo-note{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
+.demo-note .lnk{padding:0;margin-left:auto}

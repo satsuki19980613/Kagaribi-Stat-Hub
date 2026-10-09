@@ -295,6 +295,7 @@ export function StatsScreen(props: {
               series={trendSeries}
               format={(v) => fmtMetric(metric, v)}
               zero={metric === 'total' || metric === 'avg'}
+              tickFormat={(v) => (metric === 'total' ? fmtPt(Math.round(v)) : metric === 'plusRate' || metric === 'winRate' ? `${v.toFixed(0)}%` : String(Number(v.toFixed(1))))}
               markers
               ariaLabel={`${metricInfo.label}のシーズン推移`}
               empty={metric === 'survival' ? 'シーズン中に入力したスタッツがありません' : undefined}

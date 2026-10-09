@@ -6,7 +6,7 @@ import { FireBackground } from './components/FireBackground';
 import { Toast } from './components/Toast';
 import { FlameMark, SunIcon } from './components/ui';
 import { draftFromRecords, planIsEmpty, planSave, type Draft } from './domain/dayEntry';
-import { todayIso } from './domain/date';
+import { DEMO, today as todayIso } from './clock';
 import { parseFocus, toggleFocus, type FocusEntry } from './domain/focus';
 import { MAX_ACTIVE_MEMBERS, newId, type AppData, type MatchRecord, type Member, type SeasonOverride, type StatSnapshot } from './domain/model';
 import { currentSeason, seasonList } from './domain/season';
@@ -64,6 +64,11 @@ export function App(): JSX.Element {
     setToast({ key: Date.now(), message, kind, onTap: () => undefined });
   }
 
+  /** デモ版のときだけ読み込む（通常のビルドにサンプルを含めない）。 */
+  async function sampleData(): Promise<AppData> {
+    return (await import('./demo/sample')).buildSampleData();
+  }
+
   async function reload(): Promise<AppData> {
     const d = await store.loadAll();
     setData(d);
@@ -87,7 +92,19 @@ export function App(): JSX.Element {
   useEffect(() => {
     void (async () => {
       try {
-        const d = await store.loadAll();
+        let d: AppData;
+        try {
+          d = await store.loadAll();
+          // デモ版: 初回はサンプルデータを入れる。
+          if (DEMO && d.members.length === 0) {
+            await store.replaceAll(await sampleData());
+            d = await store.loadAll();
+          }
+        } catch (e) {
+          // デモ版は保存が使えない環境（プレビュー等）でもメモリ上のサンプルで見せる。
+          if (!DEMO) throw e;
+          d = await sampleData();
+        }
         setData(d);
         setEntry({ date: todayIso(), draft: draftFromRecords(d.records, todayIso()) });
         let saved: string | null = null;
@@ -330,6 +347,15 @@ export function App(): JSX.Element {
             <>
               {screen === 'menu' && (
                 <Menu
+                  demo={DEMO}
+                  onResetDemo={() => {
+                    void (async () => {
+                      const sample = await sampleData();
+                      const nd = await run(() => store.replaceAll(sample), 'サンプルデータに戻しました');
+                      if (!nd) setData(sample);
+                      setEntry({ date: today, draft: draftFromRecords(sample.records, today) });
+                    })();
+                  }}
                   data={data}
                   today={today}
                   season={nowSeason}

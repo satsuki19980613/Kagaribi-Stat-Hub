@@ -9,7 +9,7 @@ let ready = false;
 const listeners = new Set<() => void>();
 
 export function initPwa(): void {
-  if (!('serviceWorker' in navigator) || import.meta.env.DEV) return;
+  if (!('serviceWorker' in navigator) || import.meta.env.DEV || import.meta.env.VITE_DEMO === '1') return;
   update = registerSW({
     immediate: true,
     onNeedRefresh() {

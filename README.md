@@ -49,10 +49,21 @@ npm start
 
 開発用（ホットリロード）は `npm run dev`（`http://localhost:5181`）。
 
+### デモ版
+
+```bash
+npm run build:demo
+npx vite preview --outDir dist-demo
+```
+
+サンプルデータ（12 人・S31〜S33）が入ったデモ版を `dist-demo/` に作ります。「今日」を 2026/12/17 として表示し、
+S32 は「急遽 1 日短縮・11/17 休催」の手動修正の例になっています。メニューの「サンプルに戻す」で初期状態へ戻せます。
+
 | コマンド | 内容 |
 | --- | --- |
 | `npm test` | 単体テスト（Vitest） |
 | `npm run typecheck` | 型チェック |
+| `npm run build:demo` | サンプルデータ入りのデモ版を `dist-demo/` にビルド |
 | `npm run icons` | `public/icon.svg` から PWA アイコン PNG を生成 |
 
 ## 構成
@@ -63,4 +74,5 @@ src/
   data/       IndexedDB の保存層
   screens/    画面（メニュー・記録・履歴・メンバー・スタッツ・シーズン設定・バックアップ）
   components/ 共通 UI・SVG チャート・焚き火背景
+  demo/       デモ版のサンプルデータ
 ```

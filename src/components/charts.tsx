@@ -69,8 +69,10 @@ export function LineChart(props: {
   series: LineSeries[];
   format: (v: number) => string;
   height?: number;
-  /** 0 の線を強調する（ポイントは負にもなる）。 */
+  /** 0 を軸に含めて線を強調する（ポイントは負にもなる）。false なら値の範囲に合わせる。 */
   zero?: boolean;
+  /** 目盛りの表記（省略時は format）。 */
+  tickFormat?: (v: number) => string;
   /** 値の点を打つ（点がまばらなシーズン推移向け）。 */
   markers?: boolean;
   ariaLabel: string;
@@ -86,7 +88,10 @@ export function LineChart(props: {
 
   const all = series.flatMap((s) => s.values.filter((v): v is number => v != null));
   const hasData = all.length > 0;
-  const ticks = niceTicks(Math.min(0, ...all), Math.max(0, ...all));
+  const lo = props.zero ? Math.min(0, ...all) : Math.min(...all);
+  const hi = props.zero ? Math.max(0, ...all) : Math.max(...all);
+  const ticks = hasData ? niceTicks(lo, hi) : [0, 1];
+  const tickFormat = props.tickFormat ?? format;
   const y0 = ticks[0] ?? 0;
   const y1 = ticks.at(-1) ?? 1;
   const iw = Math.max(10, W - PAD.l - padR);
@@ -111,7 +116,7 @@ export function LineChart(props: {
 
   // X ラベルは最大 ~7 個に間引く（最初と最後は必ず出す）。
   const every = Math.max(1, Math.ceil(n / Math.max(2, Math.floor(iw / 56))));
-  const showX = (i: number): boolean => i === 0 || i === n - 1 || (i % every === 0 && n - 1 - i >= every * 0.6);
+  const showX = (i: number): boolean => i === 0 || i === n - 1 || (i % every === 0 && n - 1 - i >= every);
 
   function onMove(e: RPointerEvent<SVGRectElement>): void {
     const r = e.currentTarget.getBoundingClientRect();
@@ -153,7 +158,7 @@ export function LineChart(props: {
             <g key={t}>
               <line className={`grid${t === 0 && props.zero ? ' zero' : ''}`} x1={PAD.l} x2={PAD.l + iw} y1={y(t)} y2={y(t)} />
               <text className="ax" x={PAD.l - 6} y={y(t)} dy="0.32em" textAnchor="end">
-                {format(t)}
+                {tickFormat(t)}
               </text>
             </g>
           ))}

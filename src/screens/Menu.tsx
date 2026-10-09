@@ -7,6 +7,8 @@ import { recordsInRange, summarize } from '../domain/stats';
 
 /** メニュー（ルート）。記録・メンバー情報登録・スタッツビューの 3 つと、補助の操作。 */
 export function Menu(props: {
+  demo: boolean;
+  onResetDemo: () => void;
   data: AppData;
   today: string;
   season: number;
@@ -29,6 +31,14 @@ export function Menu(props: {
 
   return (
     <div className="pane">
+      {props.demo && (
+        <div className="notice ok demo-note">
+          <b>DEMO</b> サンプルデータ入りのデモ版です。今日を {shortDate(today)} として表示しています。自由に触って大丈夫です。
+          <button type="button" className="lnk" onClick={props.onResetDemo}>
+            サンプルに戻す
+          </button>
+        </div>
+      )}
       <div className="hero panel">
         <div className="hero-top">
           <span className="eyebrow">CLUB 燎 · CLUB MATCH</span>

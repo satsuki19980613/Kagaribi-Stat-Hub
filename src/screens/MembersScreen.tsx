@@ -242,7 +242,7 @@ function MemberModal(props: {
         基本スタッツ（任意）
       </h3>
       <p className="hint">
-        ゲーム内のクラブ用スタッツ画面の値です。入れたときだけ、今日（{shortDate(props.today)}）の値として残します。
+        ゲーム内の「プレイヤー情報」→「クラブマッチ」タブの値です。入れたときだけ、今日（{shortDate(props.today)}）の値として残します。
         生存ターン数は、ここで入れた 参加回数・VPIP・参加ハンド数 から計算します。
       </p>
       {last && (
