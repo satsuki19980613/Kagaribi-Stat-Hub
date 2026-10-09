@@ -537,3 +537,20 @@ p,.hint,.notice,small,.mbtn small{text-wrap:pretty}
 .tbl-scroll.fixed{background:var(--face)}
 .tbl-scroll.fixed.more{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 36px),transparent)}
 @media (pointer:coarse){.stat-tg,.partsel button{min-height:32px}.partsel button{min-width:36px}}
+/* 表の名前の列は中身の幅だけ（余った幅は数値の列へ） */
+.tbl.stats th:first-child,.tbl.stats td:first-child{width:1%}
+/* 高さの低い画面（スマホの横向き）: ヘッダとモーダルの枠を詰めて中身の場所を空ける */
+@media (max-height:500px){
+  .top{padding-top:4px;padding-bottom:4px}
+  .nbtn{height:28px}
+  .hbtn,.theme-toggle{width:32px;height:32px}
+  dialog.glass-dlg{--gd-max:calc(var(--app-h,100dvh) - 16px);max-height:var(--gd-max)}
+  .gd-head{padding:8px 16px 6px;padding-right:52px}
+  .gd-head .eyebrow{display:none}
+  .gd-head h2{font-size:16px}
+  .x{top:6px;right:8px;width:30px;height:30px}
+  .gd-scroll{padding:6px 16px 10px}
+  .gd-foot{padding:6px 16px 8px}
+  .gd-foot .btns .btn{min-height:36px;font-size:14px}
+  .tbl-scroll.fixed{max-height:calc(var(--app-h,100dvh) - 120px)}
+}
