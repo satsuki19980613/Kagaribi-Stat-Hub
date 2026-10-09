@@ -35,14 +35,12 @@
 
 上位 30 クラブの順位は、X の [@c0pmvd](https://x.com/c0pmvd) さんが毎節ポストしている集計を取り込んでいます。
 
-- 置き場所: データ専用の公開リポジトリ [satsuki19980613/kagaribi-club-data](https://github.com/satsuki19980613/kagaribi-club-data) の `clubs.json`
+- 置き場所: このリポジトリの `public/data/clubs.json`。アプリと一緒に配られ（`data/clubs.json`）、`main` に入ってデプロイされると届きます
 - アプリは起動時・ネットにつながったとき・画面に戻ってきたとき（10 分おき）に読み直し、端末に残します（オフラインでは前回の内容）
 - 取り込み: Claude Code で集計ポストのスレッドをコピペして「順位を取り込んで」と頼むと、
-  [.claude/skills/club-ranking](.claude/skills/club-ranking/SKILL.md) の手順で読み取り・前節との突き合わせ・push まで行います
-  （手で行う場合は `npm run ranking -- --file <clubs.json> --in <貼り付けた文章.txt> --dry` で確認してから `--dry` を外す）
+  [.claude/skills/club-ranking](.claude/skills/club-ranking/SKILL.md) の手順で読み取り・前節との突き合わせ・`main` への反映まで行います
+  （手で行う場合は `npm run ranking -- --file public/data/clubs.json --in <貼り付けた文章.txt> --dry` で確認してから `--dry` を外す）
 - 燎は上位 30 に入った節は公式の値、圏外の節はアプリの記録の合計で線をつなぎます
-- `club-data/clubs.json` は最初に取り込んだぶん（S31 第1〜3節）です。データ用リポジトリができたら、そちらへ移します（以降の正本はデータ用リポジトリ）
-- 読み込み先は `VITE_CLUB_DATA_URL` で変えられます
 
 ### 指標の定義
 
@@ -56,6 +54,11 @@
 生存ターン数は、同じ日に入力した 参加回数・VPIP・参加ハンド数 だけで計算します（自動カウントの参加回数は混ぜません。
 スタッツを更新しない期間があっても、値は最後に入力した時点のまま正しく残ります）。
 シーズン内の表ではシーズン末時点で最新の値、シーズン推移ではそのシーズン中に入力した値を使います。
+
+## スマホにインストール（アプリとして使う）
+
+[kagaribiICM](https://github.com/satsuki19980613/kagaribiICM) と同じく、非公開リポジトリのまま Cloudflare（無料）から配信します。
+初回の取り込み手順とインストール方法は [DEPLOY.md](DEPLOY.md) を参照してください。
 
 ## 起動（Windows / macOS / Linux 共通）
 

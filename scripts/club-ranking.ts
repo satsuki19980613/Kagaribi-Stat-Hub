@@ -1,7 +1,7 @@
 /**
  * X の集計ポスト（スレッドをまとめてコピペしたもの）からクラブ順位を読み、clubs.json に足す（同じ節なら置き換える）。
  *
- *   npm run ranking -- --file ../kagaribi-club-data/clubs.json --in paste.txt [--dry]
+ *   npm run ranking -- --file public/data/clubs.json --in paste.txt [--dry]
  *
  * --in を省くと標準入力から読む。「シーズン31 第3節」の見出しごとに 1 節として読み、古い節から順に前節と突き合わせる。
  * 見出しが無いポスト（1 節ぶんだけ）は --season 31 --round 3 で指定する。
