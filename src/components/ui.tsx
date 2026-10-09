@@ -7,17 +7,17 @@ export function FlameMark(): JSX.Element {
     <svg viewBox="10 6 80 86" aria-hidden="true">
       <defs>
         <linearGradient id="kg-fo" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#FFB300" />
-          <stop offset=".55" stopColor="#FF8F00" />
-          <stop offset="1" stopColor="#F4511E" />
+          <stop offset="0" stopColor="#F48FB1" />
+          <stop offset=".55" stopColor="#EC407A" />
+          <stop offset="1" stopColor="#C2185B" />
         </linearGradient>
         <linearGradient id="kg-fm" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#FFCA28" />
-          <stop offset="1" stopColor="#FFA000" />
+          <stop offset="0" stopColor="#F8BBD0" />
+          <stop offset="1" stopColor="#F06292" />
         </linearGradient>
         <linearGradient id="kg-fi" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#FFF8E1" />
-          <stop offset="1" stopColor="#FFE082" />
+          <stop offset="0" stopColor="#FFF7FA" />
+          <stop offset="1" stopColor="#FCD5E3" />
         </linearGradient>
       </defs>
       <path d="M50 10C57 25 74 33 74 57C74 74 63 88 50 88C37 88 26 74 26 59C26 47 32 39 38 33C38 41 41 46 46 48C43 35 46 21 50 10Z" fill="url(#kg-fo)" />

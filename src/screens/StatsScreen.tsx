@@ -22,6 +22,8 @@ import {
   type MemberSeasonRow,
   type TrendMetric,
 } from '../domain/views';
+import type { ClubState } from '../data/clubData';
+import { ClubPanel } from './ClubPanel';
 import { SeasonSelect } from './common';
 
 type Mode = 'season' | 'trend';
@@ -111,6 +113,7 @@ function MemberChips(props: { members: Member[]; focus: FocusEntry[]; onToggle: 
 
 export function StatsScreen(props: {
   data: AppData;
+  club: ClubState;
   today: string;
   seasons: number[];
   season: number;
@@ -248,6 +251,8 @@ export function StatsScreen(props: {
             />
             <MemberChips members={rows.map((r) => r.member)} focus={props.focus} onToggle={props.onToggleFocus} onClear={props.onClearFocus} />
           </section>
+
+          <ClubPanel data={data} club={props.club} season={season} today={today} />
 
           <section className="panel">
             <div className="panel-h">

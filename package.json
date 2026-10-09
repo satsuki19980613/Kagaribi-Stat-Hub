@@ -12,7 +12,8 @@
     "build:demo": "tsc --noEmit && vite build --mode demo --outDir dist-demo",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "icons": "node scripts/gen-icons.mjs"
+    "icons": "node scripts/gen-icons.mjs",
+    "ranking": "vite-node scripts/club-ranking.ts --"
   },
   "dependencies": {
     "react": "^18.3.1",

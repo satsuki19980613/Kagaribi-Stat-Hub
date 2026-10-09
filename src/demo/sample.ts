@@ -60,7 +60,7 @@ const SATSUKI_FIXED: Record<string, Rank> = { '2026-10-03': 1, '2026-10-06': 1, 
 const SATSUKI_STATS: Omit<StatSnapshot, 'id' | 'memberId'> = { date: '2026-10-09', matches: 79, wins: 20, vpip: 28, hands: 1377, createdAt: 0 };
 
 /** mulberry32: 小さく速い決定的乱数。 */
-function rng(seed: number): () => number {
+export function rng(seed: number): () => number {
   let a = seed >>> 0;
   return () => {
     a = (a + 0x6d2b79f5) >>> 0;

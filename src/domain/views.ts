@@ -134,3 +134,33 @@ export function seasonAverage(data: AppData, no: number, today: string): (number
 export function trendAverage(data: AppData, seasons: readonly number[], memberIds: readonly string[], metric: TrendMetric): (number | null)[] {
   return seasons.map((no) => meanOf(memberIds.map((id) => trendValue(data, no, id, metric))));
 }
+
+/**
+ * クラブ順位のグラフの X 軸の長さ: 取り込んだ節の最後と、今日までの開催日の数の大きい方（開催日の数を超えない）。
+ */
+export function clubAxisLength(data: AppData, no: number, today: string, lastRound: number): number {
+  const days = matchDays(no, data.seasons);
+  const held = days.filter((d) => d <= today).length;
+  return Math.min(Math.max(held, lastRound), Math.max(days.length, lastRound));
+}
+
+/** 第 1〜n 節の X 軸の名前（N 番目の開催日。開催日が足りなければ「第N節」）。 */
+export function clubAxisLabels(data: AppData, no: number, n: number): string[] {
+  const days = matchDays(no, data.seasons);
+  return Array.from({ length: n }, (_, i) => {
+    const d = days[i];
+    return d ? md(d) : `第${i + 1}節`;
+  });
+}
+
+/** 第 1〜n 節時点のアプリの記録の合計（クラブの累計。今日より先は null）。 */
+export function clubAppTotals(data: AppData, no: number, n: number, today: string): (number | null)[] {
+  const r = seasonRange(no, data.seasons);
+  const days = matchDays(no, data.seasons);
+  const recs = recordsInRange(data.records, r.start, r.end);
+  return Array.from({ length: n }, (_, i) => {
+    const d = days[i];
+    if (!d || d > today) return null;
+    return summarize(recs.filter((x) => x.date <= d)).total;
+  });
+}

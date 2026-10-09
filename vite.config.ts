@@ -18,8 +18,8 @@ export default defineConfig({
         short_name: 'Kagaribi Stat',
         description: 'クラブ「燎」のクラブマッチ戦績を記録・集計（端末内で完結）',
         lang: 'ja',
-        theme_color: '#0D0F13',
-        background_color: '#0D0F13',
+        theme_color: '#E9EAED',
+        background_color: '#E9EAED',
         display: 'standalone',
         orientation: 'any',
         icons: [
