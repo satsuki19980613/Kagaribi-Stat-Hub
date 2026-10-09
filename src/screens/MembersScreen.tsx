@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { longDate, shortDate } from '../domain/date';
 import type { AppData, Member, StatSnapshot } from '../domain/model';
-import { MAX_ACTIVE_MEMBERS } from '../domain/model';
 import { latestSnapshot, latestSurvivalSnapshot, matchCountOf, survivalOf } from '../domain/stats';
 import { Back, ConfirmDialog, InfoButton, InfoList, Modal, PaneHead } from '../components/ui';
 import { parseStatText, readNum } from '../domain/statInput';
@@ -16,7 +15,7 @@ export interface MemberSave {
   stats: { wins?: number; vpip?: number; hands?: number } | null;
 }
 
-/** メンバー情報登録。有効メンバーは最大 20 人、外した人はアーカイブに残す。 */
+/** メンバー情報登録。人数に上限はない（代走も登録する）。外した人はアーカイブに残す。 */
 export function MembersScreen(props: {
   data: AppData;
   today: string;
@@ -31,7 +30,6 @@ export function MembersScreen(props: {
   const [showArchived, setShowArchived] = useState(false);
   const active = data.members.filter((m) => !m.archived);
   const archived = data.members.filter((m) => m.archived);
-  const full = active.length >= MAX_ACTIVE_MEMBERS;
 
   const row = (m: Member): JSX.Element => {
     const snap = latestSurvivalSnapshot(data.snapshots, m.id);
@@ -68,21 +66,20 @@ export function MembersScreen(props: {
         <InfoButton title="メンバー">
           <InfoList
             items={[
-              ['人数', `有効メンバーは最大 ${MAX_ACTIVE_MEMBERS} 人。外したメンバーはアーカイブに残り（記録はそのまま）、いつでも戻せます。`],
+              ['人数', '上限はありません。代走のメンバーも登録できます。来なくなったメンバーはアーカイブに外すと記録画面がすっきりします（記録はそのまま残り、いつでも戻せます）。'],
               ['参加回数', 'はじめにこれまでの回数を入れると、あとは記録するたびに自動で +1 されます。'],
               ['基本スタッツ', '優勝回数・VPIP・参加ハンド数は任意です。入力した日の値として残り、生存ターン数の計算に使います。'],
               ['右の数字', '最新のスタッツから計算した生存ターン数です。'],
             ]}
           />
         </InfoButton>
-        <button type="button" className="btn sm primary" disabled={full} onClick={() => setEdit('new')}>
+        <button type="button" className="btn sm primary" onClick={() => setEdit('new')}>
           ＋ 追加
         </button>
       </PaneHead>
       <p className="hint">
-        有効メンバー <b className="num">{active.length}</b> / {MAX_ACTIVE_MEMBERS} 人
+        有効メンバー <b className="num">{active.length}</b> 人
       </p>
-      {full && <div className="notice warn">有効メンバーが上限の {MAX_ACTIVE_MEMBERS} 人です。追加するには誰かをアーカイブしてください。</div>}
 
       {active.length === 0 ? (
         <div className="empty">
@@ -108,7 +105,6 @@ export function MembersScreen(props: {
           member={edit === 'new' ? null : edit}
           data={data}
           today={props.today}
-          canRestore={!full}
           onSave={props.onSave}
           onArchive={props.onArchive}
           onPurge={props.onPurge}
@@ -124,7 +120,6 @@ function MemberModal(props: {
   member: Member | null;
   data: AppData;
   today: string;
-  canRestore: boolean;
   onSave: (s: MemberSave) => Promise<string | null>;
   onArchive: (m: Member, archived: boolean) => void;
   onPurge: (m: Member) => void;
@@ -186,7 +181,9 @@ function MemberModal(props: {
         <div className="btns">
           {member &&
             (member.archived ? (
-              <button type="button" className="btn ghost" disabled={!props.canRestore}
+              <button
+                type="button"
+                className="btn ghost"
                 onClick={() => {
                   props.onArchive(member, false);
                   props.onClose();
@@ -208,7 +205,6 @@ function MemberModal(props: {
       {member?.archived && (
         <div className="notice">
           アーカイブ中のメンバーです。記録画面には出ませんが、過去の記録とスタッツは残っています。
-          {!props.canRestore && ' 有効メンバーが上限のため、今は戻せません。'}
         </div>
       )}
       <label className="lbl" htmlFor="m-name">

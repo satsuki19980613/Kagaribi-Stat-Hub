@@ -2,7 +2,6 @@ import { InfoButton, InfoList } from '../components/ui';
 import type { FileStatus } from '../data/autoBackup';
 import { shortDate } from '../domain/date';
 import type { AppData } from '../domain/model';
-import { MAX_ACTIVE_MEMBERS } from '../domain/model';
 import { fmtPt } from '../domain/points';
 import { isMatchDay, matchDays, seasonOf, seasonRange } from '../domain/season';
 import { recordsInRange, summarize } from '../domain/stats';
@@ -84,7 +83,7 @@ export function Menu(props: {
             <span className="statlbl">メンバー</span>
             <b className="hs-val">
               {active}
-              <span className="hs-unit">/ {MAX_ACTIVE_MEMBERS}</span>
+              <span className="hs-unit">人</span>
             </b>
           </div>
         </div>
@@ -98,7 +97,7 @@ export function Menu(props: {
             <InfoList
               items={[
                 ['記録', '開催日にメンバーの順位を入れます。記録した人が参加、記録しなければ不参加です。'],
-                ['メンバー情報登録', 'プレイヤー名・参加回数・基本スタッツ（任意）。有効メンバーは最大 20 人です。'],
+                ['メンバー情報登録', 'プレイヤー名・参加回数・基本スタッツ（任意）。人数に上限はなく、代走のメンバーも登録できます。'],
                 ['スタッツビュー', 'シーズン内の得点推移・加点率・1位率・平均順位・生存ターン数と、シーズンごとの推移。'],
                 ['保存', '記録はこの端末のブラウザの中に保存され、どこにも送りません。変更のたびに自動でバックアップを残します。'],
                 ['クラブ順位', '上位 30 クラブの順位は、ネットにつながったときに自動で読み込みます。'],
@@ -122,7 +121,7 @@ export function Menu(props: {
           <small>プレイヤー名・参加回数・基本スタッツ</small>
         </span>
         <span className="rt">
-          {active}/{MAX_ACTIVE_MEMBERS}
+          {active}人
         </span>
       </button>
       <button type="button" className="mbtn" onClick={props.onStats}>

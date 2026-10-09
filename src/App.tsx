@@ -8,7 +8,7 @@ import { FlameMark, SunIcon } from './components/ui';
 import { draftFromRecords, planDay, type Draft } from './domain/dayEntry';
 import { DEMO, today as todayIso } from './clock';
 import { parseFocus, toggleFocus, type FocusEntry } from './domain/focus';
-import { MAX_ACTIVE_MEMBERS, newId, type AppData, type MatchRecord, type Member, type SeasonOverride, type StatSnapshot } from './domain/model';
+import { newId, type AppData, type MatchRecord, type Member, type SeasonOverride, type StatSnapshot } from './domain/model';
 import { currentSeason, seasonList } from './domain/season';
 import { baseForCount } from './domain/stats';
 import { seasonRows } from './domain/views';
@@ -271,7 +271,6 @@ export function App(): JSX.Element {
     const now = Date.now();
     let member: Member;
     if (s.id == null) {
-      if (data.members.filter((m) => !m.archived).length >= MAX_ACTIVE_MEMBERS) return `有効メンバーは ${MAX_ACTIVE_MEMBERS} 人までです。`;
       member = {
         id: newId(),
         name: s.name,
@@ -301,10 +300,6 @@ export function App(): JSX.Element {
   }
 
   async function setArchived(m: Member, archived: boolean): Promise<void> {
-    if (!archived && data.members.filter((x) => !x.archived).length >= MAX_ACTIVE_MEMBERS) {
-      showToast(`有効メンバーが ${MAX_ACTIVE_MEMBERS} 人いるため戻せません`, 'err');
-      return;
-    }
     const next: Member = archived ? { ...m, archived: true, archivedAt: Date.now() } : { ...m, archived: false };
     if (!archived) delete next.archivedAt;
     await run(() => store.putMember(next), archived ? `${m.name} をアーカイブしました` : `${m.name} を戻しました`);
