@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BarChart, LineChart, type LineSeries } from '../components/charts';
 import { ScrollBox } from '../components/ScrollBox';
 import { Back, Modal, PaneHead } from '../components/ui';
@@ -12,6 +12,7 @@ import {
   TREND_METRICS,
   clubTotal,
   md,
+  roundsOnAxis,
   seasonAxis,
   seasonCumulative,
   seasonRows,
@@ -23,10 +24,12 @@ import {
   type TrendMetric,
 } from '../domain/views';
 import type { ClubState } from '../data/clubData';
+import { CLUB_CAPACITY, OWN_CLUB, latestRound, perMemberSeries } from '../domain/clubRanking';
 import { ClubPanel } from './ClubPanel';
 import { SeasonSelect } from './common';
 
 type Mode = 'season' | 'trend';
+const CMP_KEY = 'ksh-member-cmp';
 type SortKey = 'name' | 'total' | 'avg' | 'plusRate' | 'winRate' | 'avgRank' | 'n' | 'survival';
 
 const COLS: { key: SortKey; label: string; title: string }[] = [
@@ -145,6 +148,36 @@ export function StatsScreen(props: {
   };
   const axis = seasonAxis(data, season);
 
+  // 他クラブ（1 人あたり）との比較。選んだものは端末に覚えておく。
+  const [cmp, setCmp] = useState<string>(() => {
+    try {
+      return localStorage.getItem(CMP_KEY) ?? '';
+    } catch {
+      return '';
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem(CMP_KEY, cmp);
+    } catch {
+      /* noop */
+    }
+  }, [cmp]);
+  const cd = props.club.data;
+  const cmpLatest = cd ? latestRound(cd, season) : null;
+  const cmpClubs = (cmpLatest?.clubs ?? []).filter((c) => c.name !== OWN_CLUB);
+  const cmpPick = cmp === 'avg' && cmpLatest ? 'avg' : cmpClubs.some((c) => c.name === cmp) ? cmp : '';
+  const cmpLine: LineSeries | null =
+    cd && cmpPick
+      ? {
+          id: '__cmp',
+          name: cmpPick === 'avg' ? '上位30平均' : cmpPick,
+          values: roundsOnAxis(data, season, perMemberSeries(cd, season, cmpPick, Math.max(days.length, cmpLatest?.round ?? 0))),
+          slot: 0,
+          tone: 'cmp',
+        }
+      : null;
+
   const sorted = [...rows].sort((a, b) => {
     const va = sortValue(a, sort.key);
     const vb = sortValue(b, sort.key);
@@ -235,21 +268,36 @@ export function StatsScreen(props: {
           </div>
 
           <section className="panel">
-            <div className="panel-h">
+            <div className="panel-h cmp-h">
               <b>累積ポイント推移</b>
-              <span className="rt">
-                S{season} · {md(range.start)}〜{md(range.end)}
-              </span>
+              <label className="club-pick cmp-pick">
+                <i className="key" aria-hidden="true" />
+                <span className="sr">他クラブ（1人あたり）と比べる</span>
+                <select value={cmpPick} onChange={(e) => setCmp(e.target.value)} disabled={cmpClubs.length === 0}>
+                  <option value="">他クラブと比べる</option>
+                  <option value="avg">上位30平均 · 1人あたり</option>
+                  {cmpClubs.map((c) => (
+                    <option key={c.name} value={c.name}>
+                      {c.rank}位 {c.name} · 1人あたり
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
             <LineChart
               labels={axis.map(md)}
-              series={onlyFocused(seasonSeries)}
+              series={cmpLine ? [...onlyFocused(seasonSeries), cmpLine] : onlyFocused(seasonSeries)}
               average={seasonAverage(data, season, today)}
               format={(v) => fmtPt(Math.round(v))}
               zero
               ariaLabel={`S${season} の累積ポイント推移`}
             />
             <MemberChips members={rows.map((r) => r.member)} focus={props.focus} onToggle={props.onToggleFocus} onClear={props.onClearFocus} />
+            {cmpLine && (
+              <p className="hint">
+                点々の線は {cmpLine.name} の 1 人あたり（クラブの累計 ÷ 定員 {CLUB_CAPACITY} 人）。他クラブの人数はポストに無いので、定員で割っています。
+              </p>
+            )}
           </section>
 
           <ClubPanel data={data} club={props.club} season={season} today={today} />

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { AppData } from './model';
-import { clubAppTotals, clubAxisLabels, clubAxisLength, seasonAxis, seasonCumulative, seasonRows, trendValue } from './views';
+import { clubAppTotals, clubAxisLabels, clubAxisLength, roundsOnAxis, seasonAxis, seasonCumulative, seasonRows, trendValue } from './views';
 
 const data: AppData = {
   members: [
@@ -72,5 +72,13 @@ describe('クラブ順位のグラフの軸', () => {
     // 10/7 の記録（開催日以外）は 10/8 の時点に入る。
     expect(clubAppTotals(data, 31, 3, '2026-10-08')).toEqual([5, 4, 7]);
     expect(clubAppTotals(data, 31, 3, '2026-10-07')).toEqual([5, 4, null]);
+  });
+});
+
+describe('節ごとの値をシーズン内の軸に並べる', () => {
+  it('開催日以外の記録日は直前の節の値', () => {
+    // 軸: 10/3 10/6 10/7(記録だけ) 10/8 ...
+    const v = roundsOnAxis(data, 31, [1, 2, 3]);
+    expect(v.slice(0, 5)).toEqual([1, 2, 2, 3, null]);
   });
 });

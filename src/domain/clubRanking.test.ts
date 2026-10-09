@@ -4,6 +4,7 @@ import {
   clubSeries,
   emptyClubData,
   ownSeries,
+  perMemberSeries,
   parseClubData,
   parseRankingText,
   serializeClubData,
@@ -115,5 +116,8 @@ describe('データの扱い', () => {
     expect(clubSeries(d, 31, 'A', 3)).toEqual([40, 60, null]);
     expect(topAverage(d, 31, 3)).toEqual([35, 65, null]);
     expect(ownSeries(d, 31, [12, 30, 45])).toEqual({ values: [12, 55, 45], official: [false, true, false] });
+    // 1 人あたり = 累計 ÷ 定員 20
+    expect(perMemberSeries(d, 31, 'avg', 3)).toEqual([1.75, 3.25, null]);
+    expect(perMemberSeries(d, 31, 'B', 2)).toEqual([1.5, 4]);
   });
 });

@@ -587,3 +587,14 @@ p,.hint,.notice,small,.mbtn small{text-wrap:pretty}
 .tbl-scroll.fixed.club-tbl.more{-webkit-mask-image:none;mask-image:none}
 .club-tbl .tbl tr.pick-row td{background:color-mix(in srgb,var(--s1) 14%,var(--face));color:var(--ink)}
 .club-tbl tr.clk{cursor:pointer}
+/* 他クラブ（1人あたり）: 点々の線。メンバー平均（破線）と線の模様で見分ける */
+:root{--cmp:#7c4dde}:root[data-theme="dark"]{--cmp:#b197fc}
+.cmp{--c:var(--cmp)}
+.chart .cmp .ln{stroke-dasharray:0 6;stroke-linecap:round;stroke-width:3.4}
+.chart .cmp .mk{fill:var(--cmp)}
+.chart .cmp .dl{fill:var(--cmp)}
+.tip-r.cmp .key,.cmp-pick .key{background:radial-gradient(circle,var(--cmp) 1.5px,transparent 1.9px) 0 50%/6px 6px repeat-x}
+.panel-h.cmp-h{flex-wrap:nowrap;align-items:center}
+.cmp-pick{display:flex;align-items:center;gap:6px}
+.cmp-pick .key{display:inline-block;flex:none;width:18px;height:6px}
+.cmp-pick select{min-width:0}

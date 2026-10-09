@@ -12,6 +12,8 @@ export const CLUB_FORMAT = 'kagaribi-club-ranking';
 export const CLUB_VERSION = 1;
 /** 自分のクラブの名前（順位に入っていれば公式の値を使う）。 */
 export const OWN_CLUB = '燎';
+/** クラブの定員。他クラブの人数はポストに無いので、1 人あたりは累計 ÷ 定員で見る。 */
+export const CLUB_CAPACITY = 20;
 
 export interface ClubEntry {
   rank: number;
@@ -195,6 +197,15 @@ export function topAverage(data: ClubData, season: number, n: number): (number |
     if (!r || r.clubs.length === 0) return null;
     return r.clubs.reduce((a, c) => a + c.total, 0) / r.clubs.length;
   });
+}
+
+/**
+ * メンバーのグラフに重ねる他クラブの 1 人あたり（累計 ÷ 定員）。pick は 'avg'（上位 30 平均）かクラブ名。
+ * 第 1〜n 節の値（無い節は null）。
+ */
+export function perMemberSeries(data: ClubData, season: number, pick: string, n: number): (number | null)[] {
+  const vs = pick === 'avg' ? topAverage(data, season, n) : clubSeries(data, season, pick, n);
+  return vs.map((v) => (v == null ? null : v / CLUB_CAPACITY));
 }
 
 /**

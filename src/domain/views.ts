@@ -164,3 +164,15 @@ export function clubAppTotals(data: AppData, no: number, n: number, today: strin
     return summarize(recs.filter((x) => x.date <= d)).total;
   });
 }
+
+/**
+ * 節ごとの値（第 1 節 = 1 番目の開催日）を、シーズン内の X 軸（seasonAxis）の日付に並べ直す。
+ * 開催日以外の日（記録だけある日）は直前の節の値。最初の開催日より前は null。
+ */
+export function roundsOnAxis(data: AppData, no: number, byRound: readonly (number | null)[]): (number | null)[] {
+  const days = matchDays(no, data.seasons);
+  return seasonAxis(data, no).map((d) => {
+    const k = days.filter((x) => x <= d).length;
+    return k >= 1 ? (byRound[k - 1] ?? null) : null;
+  });
+}
