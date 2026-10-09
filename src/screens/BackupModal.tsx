@@ -183,7 +183,7 @@ export function BackupModal(props: {
       <p className="hint">機種変更や別のブラウザへ移すときに使います。読み込むと今のデータは置き換わります（置き換える前の状態は自動バックアップに残ります）。</p>
       <div className="btns">
         <button type="button" className="btn" onClick={exportJson}>
-          書き出す（JSON）
+          書き出す
         </button>
         <button type="button" className="btn" onClick={() => fileRef.current?.click()}>
           読み込む

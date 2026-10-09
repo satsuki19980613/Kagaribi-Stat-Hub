@@ -130,7 +130,9 @@ export function LineChart(props: {
 
   // X ラベルは最大 ~7 個に間引く（最初と最後は必ず出す）。
   const every = Math.max(1, Math.ceil(n / Math.max(2, Math.floor(iw / 56))));
-  const showX = (i: number): boolean => i === 0 || i === n - 1 || (i % every === 0 && n - 1 - i >= every);
+  // 点が少なく全部並べられる（1 つあたり 40px 以上）なら間引かない。
+  const showX = (i: number): boolean =>
+    n * 40 <= iw || i === 0 || i === n - 1 || (i % every === 0 && n - 1 - i >= every);
 
   function onMove(e: RPointerEvent<SVGRectElement>): void {
     const r = e.currentTarget.getBoundingClientRect();
