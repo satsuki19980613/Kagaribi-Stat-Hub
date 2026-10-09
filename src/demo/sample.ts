@@ -11,6 +11,9 @@ import type { AppData, MatchRecord, Member, Rank, SeasonOverride, StatSnapshot }
 import { matchDays } from '../domain/season';
 
 
+/** サンプルの版。変えると、デモを開いたときに入れ直す。 */
+export const SAMPLE_VERSION = 2;
+
 interface Profile {
   name: string;
   /** 正なら上位に寄る。 */

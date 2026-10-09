@@ -116,10 +116,14 @@ export function App(): JSX.Element {
         let d: AppData;
         try {
           d = await store.loadAll();
-          // デモ版: 初回はサンプルデータを入れる。
-          if (DEMO && d.members.length === 0) {
-            await store.replaceAll(await sampleData());
-            d = await store.loadAll();
+          // デモ版: 初回（またはサンプルの版が変わったとき）はサンプルデータを入れる。
+          if (DEMO) {
+            const { SAMPLE_VERSION } = await import('./demo/sample');
+            if (d.members.length === 0 || (await store.getMeta<number>('demoSample')) !== SAMPLE_VERSION) {
+              await store.replaceAll(await sampleData());
+              await store.setMeta('demoSample', SAMPLE_VERSION);
+              d = await store.loadAll();
+            }
           }
         } catch (e) {
           // デモ版は保存が使えない環境（プレビュー等）でもメモリ上のサンプルで見せる。
