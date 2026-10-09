@@ -407,13 +407,23 @@ button.brand{border:0;background:none;padding:0;color:inherit;cursor:pointer}
 .th-btn.on{color:var(--ink)}
 .nmcell{display:inline-flex;align-items:center;gap:6px;max-width:9em;overflow:hidden;text-overflow:ellipsis}
 .nmcell .key,.chip .key,.tip-r .key{display:inline-block;width:12px;height:2px;flex:none;background:var(--c,transparent)}
-.nmcell:not([class*=" s"]) .key{background:transparent;width:0}
+.nmcell:not([class*=" s"]):not(.legend-avg) .key{background:transparent;width:0}
+.nmcell.legend-avg .key{width:14px}
+.tbl.stats tr.avg-row td{font-weight:700;color:var(--ink);border-bottom:1px solid var(--hair-2)}
+/* 人数が増えてもパネルの高さは変えず、表の中でスクロールする（見出し行と名前の列は固定） */
+.tbl-scroll.fixed{max-height:min(440px,60dvh);overflow:auto;overscroll-behavior:contain}
+.tbl-scroll.fixed .tbl.stats thead th{position:sticky;top:0;z-index:2;background:var(--face)}
+.tbl-scroll.fixed .tbl.stats thead th:first-child{z-index:3}
 .gd-scroll .tbl-scroll{margin:0 -22px;padding:0 22px}
 .gd-scroll .tbl.stats th:first-child,.gd-scroll .tbl.stats td:first-child{left:-22px;padding-left:22px}
 
 /* 凡例兼メンバー選択 */
 .chips-wrap{display:grid;gap:6px}
-.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chips{display:flex;flex-wrap:nowrap;gap:4px;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;
+  margin:0 -14px;padding:2px 14px 8px;scroll-padding:0 14px}
+.chip{flex:none}
+.chip.legend-avg{cursor:default;border-style:dashed;color:var(--ink-2);position:sticky;left:-14px;z-index:1;background:var(--face)}
+.chips .chip.legend-avg .key{width:14px}
 .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--hair-2);background:transparent;color:var(--ink-2);font-size:12px;font-weight:700;padding:4px 9px;cursor:pointer;max-width:12em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chip:not(.on) .key{width:0}
 .chip.on{border-color:var(--c);color:var(--ink);background:var(--glass-hi)}
@@ -427,7 +437,6 @@ button.brand{border:0;background:none;padding:0;color:inherit;cursor:pointer}
 .chart .grid{stroke:var(--hair);stroke-width:1}
 .chart .grid.zero{stroke:var(--hair-2)}
 .chart .ax{fill:var(--muted);font-family:var(--f-num);font-size:10px;font-weight:600;font-variant-numeric:tabular-nums}
-.chart .ctx{fill:none;stroke:var(--muted);stroke-opacity:.35;stroke-width:1;stroke-linejoin:round}
 .chart .ln{fill:none;stroke:var(--c);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
 .chart .mk{fill:var(--c);stroke:var(--face);stroke-width:2}
 .chart .dl{fill:var(--ink);font-size:11px;font-weight:700}
@@ -471,3 +480,102 @@ button.brand{border:0;background:none;padding:0;color:inherit;cursor:pointer}
 .cal-key.has{background:var(--you);width:6px;height:6px}
 .demo-note{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
 .demo-note .lnk{padding:0;margin-left:auto}
+.demo-note .btn{margin-left:auto}
+/* メンバー平均（点線・インク色） */
+.avg{--c:var(--ink-2)}
+.chart .avg .ln{stroke-dasharray:5 4;stroke-width:2}
+.chart .avg .mk{fill:var(--ink-2)}
+.chart .avg .dl{fill:var(--ink-2)}
+.tip-r.avg .key,.legend-avg .key{background:repeating-linear-gradient(90deg,var(--ink-2) 0 4px,transparent 4px 7px)}
+.bk-list{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:4px;max-height:240px;overflow:auto;overscroll-behavior:contain}
+.bk-list li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;padding:6px 10px;border:1px solid var(--hair);background:var(--glass-lo);font-size:12px}
+.bk-list .num{font-weight:700;font-size:13px}
+
+/* 4 つ並びのタイル（スタッツ）。スマホでは 2×2 */
+.hs-grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:560px){.hs-grid.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* スクロールバー: 矢印もトラックも無い、細い線だけ */
+::-webkit-scrollbar{width:4px;height:4px;background:transparent}
+::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--hair-2)}
+::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+::-webkit-scrollbar-button{display:none;width:0;height:0}
+@supports not selector(::-webkit-scrollbar){*{scrollbar-width:thin;scrollbar-color:var(--hair-2) transparent}}
+
+/* 記録画面: 任意のスタッツ（普段は畳む・点線で控えめに） */
+.ent-tools{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.stat-tg{display:inline-flex;align-items:center;gap:5px;border:1px dashed var(--hair-2);background:transparent;color:var(--muted);
+  font-family:var(--f-ui);font-size:10px;font-weight:700;padding:2px 7px;cursor:pointer;white-space:nowrap}
+.stat-tg .opt{font-size:9px;font-weight:600;color:var(--muted);opacity:.75;letter-spacing:.04em}
+.stat-tg[aria-expanded="true"]{border-style:solid;color:var(--ink-2)}
+.stat-tg.has{border-style:solid;border-color:var(--you);color:var(--you-text)}
+.stat-tg.err{border-style:solid;border-color:var(--cpu);color:var(--cpu-text)}
+@media (hover:hover){.stat-tg:hover{border-color:var(--ink-2);color:var(--ink-2)}}
+.stat-drawer{grid-column:1/-1;display:grid;gap:6px;margin-top:2px;padding-top:8px;border-top:1px dashed var(--hair-2)}
+.sd-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.sd-f{display:grid;gap:3px;min-width:0}
+.sd-f span{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.04em}
+.sd-f .tin{min-width:0;padding:6px 8px;font-size:15px}
+.sd-f .tin::placeholder{color:var(--muted);opacity:.55}
+.sd-note{margin:0;font-size:11px;line-height:1.55;color:var(--muted)}
+.sd-note b{color:var(--ink)}
+@media (pointer:coarse){.stat-tg,.partsel button{min-height:28px}.stat-tg{padding:4px 9px}}
+
+/* ===== 画面サイズ QA の修正 ===== */
+/* 日本語は文節で折り返す（語尾 1〜2 文字だけが次の行へ落ちないように） */
+body{word-break:auto-phrase}
+p,.hint,.notice,small,.mbtn small{text-wrap:pretty}
+.nw{white-space:nowrap}
+.menu-note{text-align:center;margin-top:6px}
+.panel-h{flex-wrap:wrap}
+.panel-h b{white-space:nowrap}
+@media (max-width:360px){.fgrid:not(.three){grid-template-columns:1fr}}
+.x-sm{width:32px;height:32px}
+.gd-scroll .btn.wide{margin-top:8px}
+/* 高さ固定の表: 名前の列と数値の列で背景をそろえ、続きがある間は下端をぼかす */
+.tbl-scroll.fixed{background:var(--face)}
+.tbl-scroll.fixed.more{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 36px),transparent)}
+@media (pointer:coarse){.stat-tg,.partsel button{min-height:32px}.partsel button{min-width:36px}}
+/* 表の名前の列は中身の幅だけ（余った幅は数値の列へ） */
+.tbl.stats th:first-child,.tbl.stats td:first-child{width:1%}
+/* 高さの低い画面（スマホの横向き）: ヘッダとモーダルの枠を詰めて中身の場所を空ける */
+@media (max-height:500px){
+  .top{padding-top:4px;padding-bottom:4px}
+  .nbtn{height:28px}
+  .hbtn,.theme-toggle{width:32px;height:32px}
+  dialog.glass-dlg{--gd-max:calc(var(--app-h,100dvh) - 16px);max-height:var(--gd-max)}
+  .gd-head{padding:8px 16px 6px;padding-right:52px}
+  .gd-head .eyebrow{display:none}
+  .gd-head h2{font-size:16px}
+  .x{top:6px;right:8px;width:30px;height:30px}
+  .gd-scroll{padding:6px 16px 10px}
+  .gd-foot{padding:6px 16px 8px}
+  .gd-foot .btns .btn{min-height:36px;font-size:14px}
+  .tbl-scroll.fixed{max-height:calc(var(--app-h,100dvh) - 120px)}
+}
+/* 横スクロールする表は、固定の先頭列とほかの列を同じ不透明な面に載せる（モーダル内も） */
+.tbl-scroll{background:var(--face)}
+/* 高さの低い画面: メニュー上のまとめを詰めて、メニューのボタンを 1 画面目に入れる */
+@media (max-height:500px){
+  .hero{gap:6px;padding:10px 14px}
+  .hero .hs-grid{display:none}
+  .season-tag{font-size:22px}
+  .demo-note{padding:8px 12px}
+}
+@media (pointer:coarse){.subrow .btn{min-height:36px}}
+.rec-main{padding-right:10px}
+.day-h{min-height:36px;align-items:center}
+.cal-key{vertical-align:-1px}
+.cal-key.has{vertical-align:1px}
+/* ヘッダの左右を本文の余白（16px）にそろえる */
+.top{padding-left:clamp(16px,3vw,32px);padding-right:clamp(16px,3vw,32px)}
+/* メニュー上のまとめは 3 つ横並び（ごく狭い画面だけ 2 列） */
+.hero .hs-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.hero .hs-grid>.hs-stat:nth-child(3):last-child{grid-column:auto}
+@media (max-width:359px){.hero .hs-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hero .hs-grid>.hs-stat:nth-child(3):last-child{grid-column:1/-1}}
+/* モーダル内の表は、モーダルの左右余白（狭い画面は 16px）に合わせて端まで */
+@media (max-width:420px){
+  .gd-scroll .tbl-scroll{margin:0 -16px;padding:0 16px}
+  .gd-scroll .tbl.stats th:first-child,.gd-scroll .tbl.stats td:first-child{left:-16px;padding-left:16px}
+}

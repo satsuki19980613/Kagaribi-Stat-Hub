@@ -33,8 +33,8 @@ export function SeasonsScreen(props: {
       <Back label="MENU" onClick={props.onBack} />
       <PaneHead eyebrow="SEASONS" title="シーズン設定" />
       <p className="hint">
-        シーズンは記録した日付の月から自動で決まります（S31 = 2026年10月、以降 1 か月ごとに +1）。
-        公式の日程が急に変わったとき（終了が 1 日早まる・休催日がある等）は、そのシーズンを開いて期間や開催日を直してください。
+        シーズンは記録した日付の月から自動で決まります（S31 = 2026年10月、以降 1 か月ごとに +1）。
+        公式の日程が急に変わったとき（終了が 1 日早まる・休催日がある等）は、そのシーズンを開いて期間や開催日を直してください。
       </p>
       <ul className="recs">
         {list.map((no) => {
@@ -133,7 +133,7 @@ function SeasonModal(props: { no: number; data: AppData; onSave: (o: SeasonOverr
       }
     >
       <p className="hint">
-        自動判定: {shortDate(def.start)} 〜 {shortDate(def.end)}（火・木・土が開催日）
+        自動判定: {shortDate(def.start)} 〜 {shortDate(def.end)}<span className="nw">（火・木・土が開催日）</span>
       </p>
       <div className="fgrid">
         <div>

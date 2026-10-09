@@ -3,19 +3,23 @@ import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent as RPoi
 /**
  * 依存なしの SVG チャート（折れ線・棒）。
  *
- * - 注目したメンバー（slot あり）は系列色の 2px 線、それ以外は細い灰色の線で文脈として薄く描く。
+ * - 比べる基準として「メンバー平均」を点線で常に描き、強調したメンバーだけを系列色の 2px 線で重ねる
+ *   （20 人ぶんの線を全部描くと読めないので、ほかのメンバーは描かない）。
  *   色はメンバーに付いて回る（slot は選んだときに決まり、順位で塗り替えない）。
  * - 縦のクロスヘアが最寄りの X に吸い付き、ツールチップにその X の値を全部出す。
- * - 注目が 4 本以下なら線の右端に名前を直接書く。値そのものは表（各画面の表）でも読める。
+ * - 線が 5 本以下なら右端に名前を直接書く。値そのものは表（各画面の表）でも読める。
  */
 
 export interface LineSeries {
   id: string;
   name: string;
   values: (number | null)[];
-  /** 0〜7 の系列色。null は文脈線（灰色）。 */
-  slot: number | null;
+  /** 0〜7 の系列色。 */
+  slot: number;
 }
+
+const AVG_ID = '__avg';
+const AVG_NAME = 'メンバー平均';
 
 const PAD = { t: 12, r: 12, b: 26, l: 36 };
 const LABEL_W = 64;
@@ -75,6 +79,8 @@ export function LineChart(props: {
   tickFormat?: (v: number) => string;
   /** 値の点を打つ（点がまばらなシーズン推移向け）。 */
   markers?: boolean;
+  /** メンバー平均（点線で描く）。 */
+  average?: (number | null)[];
   ariaLabel: string;
   empty?: string;
 }): JSX.Element {
@@ -82,11 +88,19 @@ export function LineChart(props: {
   const H = props.height ?? 220;
   const [box, W] = useWidth<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
-  const focused = series.filter((s) => s.slot != null);
-  const direct = focused.length > 0 && focused.length <= 4;
-  const padR = PAD.r + (direct ? LABEL_W : 0);
+  const avg = props.average;
+  const lines: { id: string; name: string; values: (number | null)[]; slot: number | null }[] = [
+    ...(avg ? [{ id: AVG_ID, name: AVG_NAME, values: avg, slot: null }] : []),
+    ...series,
+  ];
+  const direct = lines.length > 0 && lines.length <= 5;
+  // 名前ラベルの分の余白は、線が右端の近くまで伸びているときだけ取る（シーズン途中は右が空くので不要）。
+  const nLabels = labels.length;
+  const lastAt = Math.max(-1, ...lines.map((s) => s.values.reduce<number>((a, v, i) => (v != null ? i : a), -1)));
+  const nearEnd = lastAt >= nLabels - 1 - Math.ceil(nLabels * 0.2);
+  const padR = PAD.r + (direct && nearEnd ? LABEL_W : 0);
 
-  const all = series.flatMap((s) => s.values.filter((v): v is number => v != null));
+  const all = lines.flatMap((s) => s.values.filter((v): v is number => v != null));
   const hasData = all.length > 0;
   const lo = props.zero ? Math.min(0, ...all) : Math.min(...all);
   const hi = props.zero ? Math.max(0, ...all) : Math.max(...all);
@@ -116,7 +130,9 @@ export function LineChart(props: {
 
   // X ラベルは最大 ~7 個に間引く（最初と最後は必ず出す）。
   const every = Math.max(1, Math.ceil(n / Math.max(2, Math.floor(iw / 56))));
-  const showX = (i: number): boolean => i === 0 || i === n - 1 || (i % every === 0 && n - 1 - i >= every);
+  // 点が少なく全部並べられる（1 つあたり 40px 以上）なら間引かない。
+  const showX = (i: number): boolean =>
+    n * 40 <= iw || i === 0 || i === n - 1 || (i % every === 0 && n - 1 - i >= every);
 
   function onMove(e: RPointerEvent<SVGRectElement>): void {
     const r = e.currentTarget.getBoundingClientRect();
@@ -131,23 +147,23 @@ export function LineChart(props: {
   };
   const labelY = direct
     ? spread(
-        focused.flatMap((s) => {
+        lines.flatMap((s) => {
           const li = lastIdx(s.values);
           return li < 0 ? [] : [{ id: s.id, y: y(s.values[li]!) }];
         }),
-        13,
+        15,
         PAD.t + 4,
         PAD.t + ih,
       )
     : new Map<string, number>();
 
-  const tip = hover == null ? null : (() => {
-    const rows = (focused.length ? focused : series)
-      .map((s) => ({ s, v: s.values[hover] ?? null }))
-      .filter((r): r is { s: LineSeries; v: number } => r.v != null)
-      .sort((a, b) => b.v - a.v);
-    return { rows: focused.length ? rows : rows.slice(0, 6), more: focused.length ? 0 : Math.max(0, rows.length - 6) };
-  })();
+  const tip =
+    hover == null
+      ? null
+      : lines
+          .map((s) => ({ s, v: s.values[hover] ?? null }))
+          .filter((r): r is { s: (typeof lines)[number]; v: number } => r.v != null)
+          .sort((a, b) => b.v - a.v);
   const tipLeft = hover == null ? 0 : x(hover);
 
   return (
@@ -169,12 +185,8 @@ export function LineChart(props: {
               </text>
             ) : null,
           )}
-          {hasData &&
-            series
-              .filter((s) => s.slot == null)
-              .map((s) => <path key={s.id} className="ctx" d={path(s.values)} />)}
-          {focused.map((s) => (
-            <g key={s.id} className={`s${s.slot! + 1}`}>
+          {lines.map((s) => (
+            <g key={s.id} className={s.slot == null ? 'avg' : `s${s.slot + 1}`}>
               <path className="ln" d={path(s.values)} />
               {s.values.map((v, i) => {
                 if (v == null) return null;
@@ -183,7 +195,7 @@ export function LineChart(props: {
               })}
               {direct && labelY.has(s.id) && (
                 <text className="dl" x={x(lastIdx(s.values)) + 8} y={labelY.get(s.id)} dy="0.32em">
-                  {s.name.length > 6 ? `${s.name.slice(0, 6)}…` : s.name}
+                  {s.slot == null ? '平均' : s.name.length > 6 ? `${s.name.slice(0, 6)}…` : s.name}
                 </text>
               )}
             </g>
@@ -207,15 +219,14 @@ export function LineChart(props: {
       {tip && hasData && (
         <div className={`tip${tipLeft > W / 2 ? ' l' : ''}`} style={{ left: tipLeft }}>
           <b className="tip-h">{labels[hover!]}</b>
-          {tip.rows.length === 0 && <span className="tip-r muted">記録なし</span>}
-          {tip.rows.map(({ s, v }) => (
-            <span key={s.id} className={`tip-r${s.slot != null ? ` s${s.slot + 1}` : ''}`}>
+          {tip.length === 0 && <span className="tip-r muted">記録なし</span>}
+          {tip.map(({ s, v }) => (
+            <span key={s.id} className={`tip-r ${s.slot == null ? 'avg' : `s${s.slot + 1}`}`}>
               <i className="key" />
               <b>{format(v)}</b>
               <span>{s.name}</span>
             </span>
           ))}
-          {tip.more > 0 && <span className="tip-r muted">ほか {tip.more} 人</span>}
         </div>
       )}
     </div>

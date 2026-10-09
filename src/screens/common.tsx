@@ -23,10 +23,4 @@ export function SeasonSelect(props: {
   );
 }
 
-/** 数値入力の文字列を読む。空なら undefined、数でなければ NaN。 */
-export function readNum(s: string): number | undefined {
-  const t = s.trim().replace(/[,，%％]/g, '');
-  if (t === '') return undefined;
-  const n = Number(t.replace(/[０-９．]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0)));
-  return Number.isFinite(n) ? n : NaN;
-}
+export { readNum } from '../domain/statInput';

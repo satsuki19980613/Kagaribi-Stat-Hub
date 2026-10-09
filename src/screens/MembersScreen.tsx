@@ -4,7 +4,7 @@ import type { AppData, Member, StatSnapshot } from '../domain/model';
 import { MAX_ACTIVE_MEMBERS } from '../domain/model';
 import { latestSnapshot, latestSurvivalSnapshot, matchCountOf, survivalOf } from '../domain/stats';
 import { Back, ConfirmDialog, Modal, PaneHead } from '../components/ui';
-import { readNum } from './common';
+import { parseStatText, readNum } from '../domain/statInput';
 
 export interface MemberSave {
   /** 新規なら null。 */
@@ -49,7 +49,7 @@ export function MembersScreen(props: {
                 <span className="hs-unit">ターン</span>
               </>
             ) : (
-              <span className="muted">生存ターン —</span>
+              <span className="muted">生存T 未入力</span>
             )}
           </span>
           <span className="rec-sub">
@@ -151,24 +151,11 @@ function MemberModal(props: {
     else if (data.members.some((m) => m.id !== member?.id && m.name.trim() === nm)) out.push('同じ名前のメンバーがいます（アーカイブを含む）。');
     const m = readNum(matches) ?? (member ? count : 0);
     if (!Number.isInteger(m) || m < 0) out.push('参加回数は 0 以上の整数で入力してください。');
-    const w = readNum(wins);
-    const v = readNum(vpip);
-    const h = readNum(hands);
-    if (w !== undefined && (!Number.isInteger(w) || w < 0)) out.push('優勝回数は 0 以上の整数で入力してください。');
-    else if (w !== undefined && w > m) out.push('優勝回数が参加回数を超えています。');
-    if (v !== undefined && !(v > 0 && v <= 100)) out.push('VPIP は 0〜100 の % で入力してください。');
-    if (h !== undefined && (!Number.isInteger(h) || h < 0)) out.push('参加ハンド数は 0 以上の整数で入力してください。');
-    if ((v === undefined) !== (h === undefined)) out.push('VPIP と参加ハンド数はセットで入力してください（生存ターン数の計算に両方使います）。');
-    if ((v !== undefined || h !== undefined) && m === 0) out.push('スタッツを入れるときは参加回数も入力してください。');
+    const st = Number.isInteger(m) && m >= 0 ? parseStatText({ wins, vpip, hands }, m) : { values: null, issues: [] };
+    out.push(...st.issues);
     setIssues(out);
     if (out.length) return null;
-    const any = w !== undefined || v !== undefined || h !== undefined;
-    return {
-      id: member?.id ?? null,
-      name: nm,
-      matches: m,
-      stats: any ? { ...(w !== undefined ? { wins: w } : {}), ...(v !== undefined ? { vpip: v } : {}), ...(h !== undefined ? { hands: h } : {}) } : null,
-    };
+    return { id: member?.id ?? null, name: nm, matches: m, stats: st.values };
   }
 
   async function save(): Promise<void> {
@@ -247,9 +234,9 @@ function MemberModal(props: {
       </p>
       {last && (
         <p className="hint">
-          前回（{longDate(last.date)}）: 参加 {last.matches}回{last.wins != null && ` · 優勝 ${last.wins}回`}
-          {last.vpip != null && ` · VPIP ${last.vpip}%`}
-          {last.hands != null && ` · 参加ハンド ${last.hands}`}
+          前回（{longDate(last.date)}）: <span className="nw">参加 {last.matches}回</span>{last.wins != null && ` · 優勝 ${last.wins}回`}
+          {last.vpip != null && ` · VPIP ${last.vpip}%`}
+          {last.hands != null && ` · 参加ハンド ${last.hands}`}
         </p>
       )}
       <div className="fgrid three">
@@ -292,7 +279,8 @@ function MemberModal(props: {
             <i className="gem" />
             スタッツの履歴
           </h3>
-          <table className="tbl">
+          <div className="tbl-scroll">
+          <table className="tbl stats">
             <thead>
               <tr>
                 <th>日付</th>
@@ -323,6 +311,7 @@ function MemberModal(props: {
               })}
             </tbody>
           </table>
+          </div>
         </>
       )}
 

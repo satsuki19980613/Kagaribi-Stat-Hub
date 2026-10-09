@@ -5,13 +5,15 @@ import { applyUpdate, onUpdateReady } from './pwaUpdate';
 import { FireBackground } from './components/FireBackground';
 import { Toast } from './components/Toast';
 import { FlameMark, SunIcon } from './components/ui';
-import { draftFromRecords, planIsEmpty, planSave, type Draft } from './domain/dayEntry';
+import { draftFromRecords, planDay, type Draft } from './domain/dayEntry';
 import { DEMO, today as todayIso } from './clock';
 import { parseFocus, toggleFocus, type FocusEntry } from './domain/focus';
 import { MAX_ACTIVE_MEMBERS, newId, type AppData, type MatchRecord, type Member, type SeasonOverride, type StatSnapshot } from './domain/model';
 import { currentSeason, seasonList } from './domain/season';
 import { baseForCount } from './domain/stats';
 import { seasonRows } from './domain/views';
+import * as autoBackup from './data/autoBackup';
+import type { FileStatus } from './data/autoBackup';
 import * as store from './data/store';
 import { BackupModal } from './screens/BackupModal';
 import { HistoryScreen } from './screens/HistoryScreen';
@@ -53,6 +55,9 @@ export function App(): JSX.Element {
   const [viewSeason, setViewSeason] = useState<number | null>(null);
   const [focus, setFocus] = useState<FocusEntry[]>([]);
   const [backupOpen, setBackupOpen] = useState(false);
+  const [fileStatus, setFileStatus] = useState<FileStatus>({ state: 'unsupported' });
+  const [persisted, setPersisted] = useState<boolean | null>(null);
+  const backupTimer = useRef<number | undefined>(undefined);
   const [toast, setToast] = useState<ToastState | null>(null);
   const closeToast = useCallback(() => setToast(null), []);
 
@@ -75,11 +80,27 @@ export function App(): JSX.Element {
     return d;
   }
 
-  /** 書き込み → 読み直し。失敗はトーストで知らせる。 */
+  /** 自動バックアップ（端末内の履歴 + 設定していればファイル）。変更が続いたら最後の 1 回だけ。 */
+  function scheduleBackup(d: AppData, delay = 1200): void {
+    window.clearTimeout(backupTimer.current);
+    backupTimer.current = window.setTimeout(() => {
+      void (async () => {
+        try {
+          await autoBackup.snapshot(d);
+          setFileStatus(await autoBackup.writeFileIfOn(d));
+        } catch {
+          /* 自動バックアップの失敗で操作は止めない（状態はバックアップ画面で見える）。 */
+        }
+      })();
+    }, delay);
+  }
+
+  /** 書き込み → 読み直し → 自動バックアップ。失敗はトーストで知らせる。 */
   async function run(fn: () => Promise<void>, ok?: string): Promise<AppData | null> {
     try {
       await fn();
       const d = await reload();
+      scheduleBackup(d);
       if (ok) showToast(ok);
       return d;
     } catch (e) {
@@ -95,10 +116,14 @@ export function App(): JSX.Element {
         let d: AppData;
         try {
           d = await store.loadAll();
-          // デモ版: 初回はサンプルデータを入れる。
-          if (DEMO && d.members.length === 0) {
-            await store.replaceAll(await sampleData());
-            d = await store.loadAll();
+          // デモ版: 初回（またはサンプルの版が変わったとき）はサンプルデータを入れる。
+          if (DEMO) {
+            const { SAMPLE_VERSION } = await import('./demo/sample');
+            if (d.members.length === 0 || (await store.getMeta<number>('demoSample')) !== SAMPLE_VERSION) {
+              await store.replaceAll(await sampleData());
+              await store.setMeta('demoSample', SAMPLE_VERSION);
+              d = await store.loadAll();
+            }
           }
         } catch (e) {
           // デモ版は保存が使えない環境（プレビュー等）でもメモリ上のサンプルで見せる。
@@ -106,7 +131,14 @@ export function App(): JSX.Element {
           d = await sampleData();
         }
         setData(d);
-        setEntry({ date: todayIso(), draft: draftFromRecords(d.records, todayIso()) });
+        setEntry({ date: todayIso(), draft: draftFromRecords(d.records, todayIso(), d.snapshots) });
+        // 起動時: 今の状態を履歴に残し（変わっていなければ何もしない）、保存領域の保護を頼む。
+        scheduleBackup(d, 0);
+        void autoBackup.requestPersist().then(setPersisted);
+        void autoBackup
+          .fileStatus()
+          .then(setFileStatus)
+          .catch(() => undefined);
         let saved: string | null = null;
         try {
           saved = localStorage.getItem(FOCUS_KEY);
@@ -162,21 +194,23 @@ export function App(): JSX.Element {
     setStack(['menu', t]);
   }
   function entryDirty(e: Entry = entry, d: AppData = data): boolean {
-    return !planIsEmpty(planSave(d.records, e.date, e.draft));
+    return planDay(d, e.date, e.draft).dirty;
   }
   /** 記録画面を開く。書きかけが無ければ今日を開く。 */
   function openRecord(date?: string): void {
-    if (date) setEntry({ date, draft: draftFromRecords(data.records, date) });
-    else if (!entryDirty()) setEntry({ date: today, draft: draftFromRecords(data.records, today) });
+    if (date) setEntry({ date, draft: draftFromRecords(data.records, date, data.snapshots) });
+    else if (!entryDirty()) setEntry({ date: today, draft: draftFromRecords(data.records, today, data.snapshots) });
   }
 
   // ---- 記録 ----
   async function saveDay(): Promise<void> {
-    const plan = planSave(data.records, entry.date, entry.draft);
-    if (planIsEmpty(plan)) return;
-    const parts = [plan.added && `追加 ${plan.added}`, plan.updated && `修正 ${plan.updated}`, plan.deletes.length && `取消 ${plan.deletes.length}`].filter(Boolean);
-    const d = await run(() => store.applyRecords(plan.puts, plan.deletes), `保存しました（${parts.join(' · ')}）`);
-    if (d) setEntry({ date: entry.date, draft: draftFromRecords(d.records, entry.date) });
+    const plan = planDay(data, entry.date, entry.draft);
+    if (!plan.dirty || plan.blocked) return;
+    const { rec, stats } = plan;
+    const statN = stats.puts.length + stats.deletes.length;
+    const parts = [rec.added && `追加 ${rec.added}`, rec.updated && `修正 ${rec.updated}`, rec.deletes.length && `取消 ${rec.deletes.length}`, statN && `スタッツ ${statN}`].filter(Boolean);
+    const d = await run(() => store.applyDay(rec.puts, rec.deletes, stats.puts, stats.deletes), `保存しました（${parts.join(' · ')}）`);
+    if (d) setEntry({ date: entry.date, draft: draftFromRecords(d.records, entry.date, d.snapshots) });
   }
 
   async function deleteRecord(r: MatchRecord): Promise<void> {
@@ -237,6 +271,15 @@ export function App(): JSX.Element {
     setFocus((f) => f.filter((x) => x.id !== m.id));
     const { [m.id]: _gone, ...rest } = entry.draft;
     setEntry((e) => ({ ...e, draft: rest as Draft }));
+  }
+
+  async function resumeFile(): Promise<void> {
+    try {
+      if (await autoBackup.resumeFile(data)) showToast('ファイルへの自動保存を再開しました');
+    } catch (e) {
+      showToast(`ファイルに書き出せませんでした: ${errText(e)}`, 'err');
+    }
+    setFileStatus(await autoBackup.fileStatus());
   }
 
   // ---- 端末の戻る: 重なり → 画面の順に 1 段戻す ----
@@ -347,13 +390,15 @@ export function App(): JSX.Element {
             <>
               {screen === 'menu' && (
                 <Menu
+                  fileStatus={fileStatus}
+                  onResumeFile={() => void resumeFile()}
                   demo={DEMO}
                   onResetDemo={() => {
                     void (async () => {
                       const sample = await sampleData();
                       const nd = await run(() => store.replaceAll(sample), 'サンプルデータに戻しました');
                       if (!nd) setData(sample);
-                      setEntry({ date: today, draft: draftFromRecords(sample.records, today) });
+                      setEntry({ date: today, draft: draftFromRecords(sample.records, today, sample.snapshots) });
                     })();
                   }}
                   data={data}
@@ -379,7 +424,7 @@ export function App(): JSX.Element {
                   entry={entry}
                   today={today}
                   onDraft={(draft) => setEntry((e) => ({ ...e, draft }))}
-                  onDate={(date) => setEntry({ date, draft: draftFromRecords(data.records, date) })}
+                  onDate={(date) => setEntry({ date, draft: draftFromRecords(data.records, date, data.snapshots) })}
                   onSave={() => void saveDay()}
                   onBack={pop}
                   onHistory={() => push('history')}
@@ -442,19 +487,31 @@ export function App(): JSX.Element {
           )}
         </main>
 
-        {screen === 'menu' && (
-          <footer className="foot">
-            <span>記録はこの端末のブラウザに保存されます。メニューの「バックアップ」から書き出せます。</span>
-          </footer>
-        )}
-
         {backupOpen && (
           <BackupModal
             data={data}
-            onImport={async (d) => {
-              const nd = await run(() => store.replaceAll(d), 'バックアップを読み込みました');
+            file={fileStatus}
+            persisted={persisted}
+            onChooseFile={async () => {
+              try {
+                if (await autoBackup.chooseFile(data)) showToast('ファイルへの自動保存を始めました');
+              } catch (e) {
+                showToast(`ファイルに書き出せませんでした: ${errText(e)}`, 'err');
+              }
+              setFileStatus(await autoBackup.fileStatus());
+            }}
+            onResumeFile={resumeFile}
+            onStopFile={async () => {
+              await autoBackup.stopFile();
+              setFileStatus(await autoBackup.fileStatus());
+            }}
+            onImport={async (d, label) => {
+              // 置き換える前の状態を必ず履歴に残してから読み込む。
+              window.clearTimeout(backupTimer.current);
+              await autoBackup.snapshot(data).catch(() => undefined);
+              const nd = await run(() => store.replaceAll(d), `${label} を読み込みました`);
               if (nd) {
-                setEntry({ date: today, draft: draftFromRecords(nd.records, today) });
+                setEntry({ date: today, draft: draftFromRecords(nd.records, today, nd.snapshots) });
                 setFocus((f) => f.filter((x) => nd.members.some((m) => m.id === x.id)));
               }
             }}

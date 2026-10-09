@@ -23,8 +23,8 @@ describe('デモのサンプルデータ', () => {
     }
   });
 
-  it('有効メンバーは 20 人以内、アーカイブ済みが 1 人', () => {
-    expect(data.members.filter((m) => !m.archived).length).toBeLessThanOrEqual(20);
+  it('有効メンバーは上限の 20 人、アーカイブ済みが 1 人', () => {
+    expect(data.members.filter((m) => !m.archived)).toHaveLength(20);
     expect(data.members.filter((m) => m.archived)).toHaveLength(1);
   });
 
