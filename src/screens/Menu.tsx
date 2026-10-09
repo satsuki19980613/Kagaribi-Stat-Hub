@@ -112,7 +112,7 @@ export function Menu(props: {
       <button type="button" className="mbtn" onClick={props.onStats}>
         <span>
           スタッツビュー
-          <small>得点推移・平均pt・加点率・1位率・生存ターン数</small>
+          <small>得点推移・加点率・1位率・生存ターン数</small>
         </span>
         <span className="rt">STATS</span>
       </button>

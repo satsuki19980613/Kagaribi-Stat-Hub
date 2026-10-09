@@ -94,7 +94,11 @@ export function LineChart(props: {
     ...series,
   ];
   const direct = lines.length > 0 && lines.length <= 5;
-  const padR = PAD.r + (direct ? LABEL_W : 0);
+  // 名前ラベルの分の余白は、線が右端の近くまで伸びているときだけ取る（シーズン途中は右が空くので不要）。
+  const nLabels = labels.length;
+  const lastAt = Math.max(-1, ...lines.map((s) => s.values.reduce<number>((a, v, i) => (v != null ? i : a), -1)));
+  const nearEnd = lastAt >= nLabels - 1 - Math.ceil(nLabels * 0.2);
+  const padR = PAD.r + (direct && nearEnd ? LABEL_W : 0);
 
   const all = lines.flatMap((s) => s.values.filter((v): v is number => v != null));
   const hasData = all.length > 0;
