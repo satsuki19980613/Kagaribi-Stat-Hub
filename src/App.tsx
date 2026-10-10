@@ -30,6 +30,15 @@ type Tab = 'record' | 'members' | 'stats';
 /** 前の版がテーマを覚えていたキー。今は起動のたびにライトで始めるので、起動時に消す。 */
 const OLD_THEME_KEY = 'kg-theme';
 const FOCUS_KEY = 'ksh-focus';
+/** 太陽のボタンで巡るテーマ（ライトのパステル 5 色 → ダーク → 最初に戻る）。color はアドレスバーの色（theme-color）。 */
+const THEMES = [
+  { id: 'light', name: 'ピンク', color: '#FDF1F4' },
+  { id: 'blue', name: 'ブルー', color: '#EEF5FC' },
+  { id: 'yellow', name: 'イエロー', color: '#FDF8E4' },
+  { id: 'green', name: 'グリーン', color: '#EDF7F1' },
+  { id: 'lavender', name: 'ラベンダー', color: '#F4F0FB' },
+  { id: 'dark', name: 'ダーク', color: '#141014' },
+] as const;
 const EMPTY: AppData = { members: [], records: [], snapshots: [], seasons: [] };
 
 interface ToastState {
@@ -57,6 +66,7 @@ export function App(): JSX.Element {
   const [viewSeason, setViewSeason] = useState<number | null>(null);
   const [focus, setFocus] = useState<FocusEntry[]>([]);
   const [backupOpen, setBackupOpen] = useState(false);
+  const [themeName, setThemeName] = useState<string>(THEMES[0].name);
   const [fileStatus, setFileStatus] = useState<FileStatus>({ state: 'unsupported' });
   const [persisted, setPersisted] = useState<boolean | null>(null);
   const backupTimer = useRef<number | undefined>(undefined);
@@ -370,9 +380,12 @@ export function App(): JSX.Element {
 
   function toggleTheme(e: React.MouseEvent<HTMLButtonElement>): void {
     const r = document.documentElement;
-    // 起動のたびにライトで始める（端末のダーク設定にも、前回の切り替えにも合わせない）。ダークはこの画面を開いている間だけ。
-    const next = r.dataset.theme === 'dark' ? 'light' : 'dark';
-    r.dataset.theme = next;
+    // 起動のたびにピンクのライトで始める（端末のダーク設定にも、前回の切り替えにも合わせない）。色はこの画面を開いている間だけ。
+    const i = THEMES.findIndex((t) => t.id === r.dataset.theme);
+    const next = THEMES[(i + 1) % THEMES.length] ?? THEMES[0];
+    r.dataset.theme = next.id;
+    setThemeName(next.name);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', next.color);
     if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
       e.currentTarget.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(180deg)' }], {
         duration: 500,
@@ -406,7 +419,7 @@ export function App(): JSX.Element {
             </button>
           </nav>
           <div className="top-r">
-            <button type="button" className="theme-toggle" aria-label="表示テーマを切り替える" onClick={toggleTheme}>
+            <button type="button" className="theme-toggle" aria-label={`表示テーマを切り替える（いま: ${themeName}）`} title={themeName} onClick={toggleTheme}>
               <SunIcon />
             </button>
           </div>

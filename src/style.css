@@ -46,7 +46,7 @@ html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;text-
 html{background:var(--bg)}
 body{background:transparent;color:var(--ink);font-family:var(--f-ui);-webkit-font-smoothing:antialiased;overscroll-behavior:none}
 /* 背景: 炎（WebGL）→ その上にライト／ダークのベール。ぼんやり透けて揺らめいて見える */
-.fire{position:fixed;inset:0;width:100%;height:100%;z-index:-2;pointer-events:none;opacity:var(--fire-op);filter:blur(.6px) saturate(115%)}
+.fire{position:fixed;inset:0;width:100%;height:100%;z-index:-2;pointer-events:none;opacity:var(--fire-op);filter:blur(.6px) saturate(115%) hue-rotate(var(--fire-hue,0deg))}
 .veil{position:fixed;inset:0;z-index:-1;pointer-events:none;background:var(--veil);
   -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
 button{font:inherit;color:inherit;touch-action:manipulation}
@@ -624,6 +624,9 @@ p,.hint,.notice,small,.mbtn small{text-wrap:pretty}
     radial-gradient(circle at 6% 14%,rgba(255,182,201,.55),transparent 22%),
     radial-gradient(circle at 96% 6%,rgba(255,243,168,.7),transparent 20%),
     radial-gradient(circle at 98% 52%,rgba(190,227,248,.6),transparent 18%);
+  /* 炎のマーク（--fl1〜3 外・4〜5 中・6〜7 芯）と、背景の炎の色相のずらし */
+  --fl1:#F48FB1; --fl2:#EC407A; --fl3:#C2185B; --fl4:#F8BBD0; --fl5:#F06292; --fl6:#FFF7FA; --fl7:#FCD5E3;
+  --fire-hue:0deg;
 }
 :root[data-theme="dark"]{
   --bg:#141014; --ink:#F6EEF1; --ink-2:#D6C6CD; --muted:#A8949D;
@@ -640,6 +643,92 @@ p,.hint,.notice,small,.mbtn small{text-wrap:pretty}
   --cell:rgba(255,255,255,.04); --cell-pair:rgba(255,143,176,.14); --cell-ink:#A8949D;
   --pk:#D23F69; --pk-deep:#8E2747; --pk-ink:#FF8FB0; --pk-line:rgba(255,143,176,.42); --pk-shadow:rgba(238,94,134,.26); --pk-soft:rgba(255,143,176,.16); --pk-tint:rgba(255,143,176,.06);
   --veil-deco:radial-gradient(circle at 6% 14%,rgba(238,94,134,.16),transparent 24%);
+}
+/* ライトの色違い（太陽のボタンで ピンク → ブルー → イエロー → グリーン → ラベンダー → ダーク と巡る）。
+   形・影の付け方はピンクと同じで、色の変数だけを差し替える。塗り（--pk）は白い文字が読める濃さ（コントラスト 4.4 以上）にしてある。 */
+:root[data-theme="blue"]{
+  --bg:#EEF5FC;
+  --ink:#2D3540; --ink-2:#4D5867; --muted:#62707F;
+  --hair:rgba(45,53,64,.08); --hair-2:rgba(46,120,192,.32);
+  --edge:#A8CBEF;
+  --shadow:0 14px 30px -18px rgba(30,80,140,.4);
+  --you:#2E78C0; --you-soft:rgba(70,140,210,.14);
+  --nav-on:#2E78C0; --seg-on:#2E78C0; --nav-ink:#4D5867;
+  --veil:rgba(238,245,252,.58);
+  --smoke-edge:#A8CBEF; --smoke-shadow:0 5px 0 #C8DEF5;
+  --gd-edge:#A8CBEF; --gd-line:#E2EEFB;
+  --gd-shadow:0 8px 0 #C8DEF5,0 40px 80px -34px rgba(30,80,140,.45); --gd-veil:rgba(25,45,80,.2);
+  --cell:#F6FAFE; --cell-pair:#DDEBFA; --cell-ink:#62707F;
+  --pk:#2E78C0; --pk-deep:#1F5A94; --pk-ink:#2E78C0; --pk-line:#A8CBEF; --pk-shadow:#C8DEF5; --pk-soft:#DDEBFA; --pk-tint:#F6FAFE;
+  --veil-deco:
+    radial-gradient(circle at 6% 14%,rgba(168,206,245,.6),transparent 22%),
+    radial-gradient(circle at 96% 6%,rgba(255,243,168,.7),transparent 20%),
+    radial-gradient(circle at 98% 52%,rgba(196,232,214,.6),transparent 18%);
+  --fl1:#90CAF9; --fl2:#42A5F5; --fl3:#1565C0; --fl4:#BBDEFB; --fl5:#64B5F6; --fl6:#F7FBFF; --fl7:#D3E8FC;
+  --fire-hue:-125deg;
+}
+:root[data-theme="yellow"]{
+  --bg:#FDF8E4;
+  --ink:#3D3527; --ink-2:#5F5442; --muted:#736850;
+  --hair:rgba(61,53,39,.08); --hair-2:rgba(190,140,20,.36);
+  --edge:#EDCF80;
+  --shadow:0 14px 30px -18px rgba(140,100,20,.4);
+  --you:#A86A00; --you-soft:rgba(230,180,50,.16);
+  --nav-on:#A86A00; --seg-on:#A86A00; --nav-ink:#5F5442;
+  --veil:rgba(253,248,228,.58);
+  --smoke-edge:#EDCF80; --smoke-shadow:0 5px 0 #F6E3AE;
+  --gd-edge:#EDCF80; --gd-line:#FAEECB;
+  --gd-shadow:0 8px 0 #F6E3AE,0 40px 80px -34px rgba(140,100,20,.45); --gd-veil:rgba(70,55,20,.2);
+  --cell:#FFFBEE; --cell-pair:#FCF0C8; --cell-ink:#736850;
+  --pk:#A86A00; --pk-deep:#7F5000; --pk-ink:#A86A00; --pk-line:#EDCF80; --pk-shadow:#F6E3AE; --pk-soft:#FCF0C8; --pk-tint:#FFFBEE;
+  --veil-deco:
+    radial-gradient(circle at 6% 14%,rgba(255,226,140,.6),transparent 22%),
+    radial-gradient(circle at 96% 6%,rgba(255,200,180,.55),transparent 20%),
+    radial-gradient(circle at 98% 52%,rgba(190,227,248,.55),transparent 18%);
+  --fl1:#FFD54F; --fl2:#FFB300; --fl3:#E68A00; --fl4:#FFE082; --fl5:#FFC107; --fl6:#FFFDF5; --fl7:#FFF0C2;
+  --fire-hue:65deg;
+}
+:root[data-theme="green"]{
+  --bg:#EDF7F1;
+  --ink:#2C3832; --ink-2:#4B5A52; --muted:#5F6F66;
+  --hair:rgba(44,56,50,.08); --hair-2:rgba(43,132,90,.32);
+  --edge:#A3D7BB;
+  --shadow:0 14px 30px -18px rgba(30,100,65,.4);
+  --you:#2B845A; --you-soft:rgba(70,170,120,.14);
+  --nav-on:#2B845A; --seg-on:#2B845A; --nav-ink:#4B5A52;
+  --veil:rgba(237,247,241,.58);
+  --smoke-edge:#A3D7BB; --smoke-shadow:0 5px 0 #C6E8D5;
+  --gd-edge:#A3D7BB; --gd-line:#E0F2E8;
+  --gd-shadow:0 8px 0 #C6E8D5,0 40px 80px -34px rgba(30,100,65,.45); --gd-veil:rgba(25,60,40,.2);
+  --cell:#F5FBF8; --cell-pair:#DAF1E4; --cell-ink:#5F6F66;
+  --pk:#2B845A; --pk-deep:#1D6142; --pk-ink:#2B845A; --pk-line:#A3D7BB; --pk-shadow:#C6E8D5; --pk-soft:#DAF1E4; --pk-tint:#F5FBF8;
+  --veil-deco:
+    radial-gradient(circle at 6% 14%,rgba(170,224,194,.6),transparent 22%),
+    radial-gradient(circle at 96% 6%,rgba(255,243,168,.7),transparent 20%),
+    radial-gradient(circle at 98% 52%,rgba(190,227,248,.6),transparent 18%);
+  --fl1:#8FD9B0; --fl2:#3FBF7F; --fl3:#1E8A55; --fl4:#BDEBD1; --fl5:#66CC96; --fl6:#F6FDF9; --fl7:#D2F2E1;
+  --fire-hue:175deg;
+}
+:root[data-theme="lavender"]{
+  --bg:#F4F0FB;
+  --ink:#352F3D; --ink-2:#564E61; --muted:#6C6479;
+  --hair:rgba(53,47,61,.08); --hair-2:rgba(129,89,204,.32);
+  --edge:#C9B6EE;
+  --shadow:0 14px 30px -18px rgba(90,60,150,.4);
+  --you:#8159CC; --you-soft:rgba(150,110,220,.14);
+  --nav-on:#8159CC; --seg-on:#8159CC; --nav-ink:#564E61;
+  --veil:rgba(244,240,251,.58);
+  --smoke-edge:#C9B6EE; --smoke-shadow:0 5px 0 #DDD0F5;
+  --gd-edge:#C9B6EE; --gd-line:#EDE6FA;
+  --gd-shadow:0 8px 0 #DDD0F5,0 40px 80px -34px rgba(90,60,150,.45); --gd-veil:rgba(45,30,75,.2);
+  --cell:#FAF8FE; --cell-pair:#EAE2FA; --cell-ink:#6C6479;
+  --pk:#8159CC; --pk-deep:#5F3DA3; --pk-ink:#8159CC; --pk-line:#C9B6EE; --pk-shadow:#DDD0F5; --pk-soft:#EAE2FA; --pk-tint:#FAF8FE;
+  --veil-deco:
+    radial-gradient(circle at 6% 14%,rgba(208,188,245,.6),transparent 22%),
+    radial-gradient(circle at 96% 6%,rgba(255,214,230,.65),transparent 20%),
+    radial-gradient(circle at 98% 52%,rgba(190,227,248,.6),transparent 18%);
+  --fl1:#C3A8F0; --fl2:#9670E0; --fl3:#5E35B1; --fl4:#D9C8F7; --fl5:#A88AE6; --fl6:#FBF8FF; --fl7:#E6DAFA;
+  --fire-hue:-70deg;
 }
 .veil{background:var(--veil-deco),var(--veil)}
 /* キラ: メニューの大きなカードと記録ボタンの角に 1 つずつ */
@@ -692,7 +781,7 @@ dialog.glass-dlg{-webkit-backdrop-filter:none;backdrop-filter:none}
 @media (hover:hover){.mbtn:hover:not(:disabled){border-color:var(--pk);background:var(--smoke)}}
 .mbtn.hot{background:var(--pk);border-color:var(--pk);color:#fff;box-shadow:0 6px 0 var(--pk-deep)}
 .mbtn.hot small{color:#fff}
-.mbtn.hot .rt{background:#fff;color:#D23F69;padding:4px 11px;font-family:var(--f-ui);font-size:15px}
+.mbtn.hot .rt{background:#fff;color:var(--pk);padding:4px 11px;font-family:var(--f-ui);font-size:15px}
 .mbtn.hot:active:not(:disabled){box-shadow:0 3px 0 var(--pk-deep)}
 @media (hover:hover){.mbtn.hot:hover:not(:disabled){background:var(--pk);border-color:var(--pk);filter:brightness(1.05)}}
 

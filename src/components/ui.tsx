@@ -1,23 +1,23 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useBackLayer } from './BackLayer';
 
-/** 炎のマーク（アプリアイコンと同じ形）。 */
+/** 炎のマーク（アプリアイコンと同じ形）。色はテーマの --fl1〜--fl7（style.css）。 */
 export function FlameMark(): JSX.Element {
   return (
     <svg viewBox="10 6 80 86" aria-hidden="true">
       <defs>
         <linearGradient id="kg-fo" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#F48FB1" />
-          <stop offset=".55" stopColor="#EC407A" />
-          <stop offset="1" stopColor="#C2185B" />
+          <stop offset="0" style={{ stopColor: 'var(--fl1)' }} />
+          <stop offset=".55" style={{ stopColor: 'var(--fl2)' }} />
+          <stop offset="1" style={{ stopColor: 'var(--fl3)' }} />
         </linearGradient>
         <linearGradient id="kg-fm" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#F8BBD0" />
-          <stop offset="1" stopColor="#F06292" />
+          <stop offset="0" style={{ stopColor: 'var(--fl4)' }} />
+          <stop offset="1" style={{ stopColor: 'var(--fl5)' }} />
         </linearGradient>
         <linearGradient id="kg-fi" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#FFF7FA" />
-          <stop offset="1" stopColor="#FCD5E3" />
+          <stop offset="0" style={{ stopColor: 'var(--fl6)' }} />
+          <stop offset="1" style={{ stopColor: 'var(--fl7)' }} />
         </linearGradient>
       </defs>
       <path d="M50 10C57 25 74 33 74 57C74 74 63 88 50 88C37 88 26 74 26 59C26 47 32 39 38 33C38 41 41 46 46 48C43 35 46 21 50 10Z" fill="url(#kg-fo)" />
