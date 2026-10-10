@@ -1,0 +1,31 @@
+# 公開しているサイトの確認（scripts/live-check.mjs）。サイトに届くか・保護ヘッダが public/_headers のとおりか・クラブ順位が読めるか、
+# そして Mozilla HTTP Observatory の評価が A+ か。書き込みはしない（読むだけ）。
+# 起動：Actions → Live → Run workflow、main への push（配信や確認スクリプトが変わったとき）、毎週月曜
+name: Live
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['public/_headers', 'wrangler.jsonc', 'scripts/live-check.mjs', '.github/workflows/live.yml']
+  schedule:
+    - cron: '41 0 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  site:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SITE: ${{ vars.SITE_URL || 'https://kagaribi-stat-hub.wsk641.workers.dev' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      # main に入ってから Cloudflare のビルドが終わるまで待つ（push のときだけ）
+      - if: github.event_name == 'push'
+        run: sleep 180
+      - run: node scripts/live-check.mjs

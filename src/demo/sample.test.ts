@@ -23,7 +23,7 @@ describe('デモのサンプルデータ', () => {
     }
   });
 
-  it('有効メンバーは上限の 20 人、アーカイブ済みが 1 人', () => {
+  it('有効メンバーが 20 人、アーカイブ済みが 1 人', () => {
     expect(data.members.filter((m) => !m.archived)).toHaveLength(20);
     expect(data.members.filter((m) => m.archived)).toHaveLength(1);
   });
