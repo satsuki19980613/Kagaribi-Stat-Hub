@@ -93,7 +93,7 @@
 | [CI](https://github.com/satsuki19980613/Kagaribi-Stat-Hub/actions/workflows/ci.yml) | 型チェック・テスト・ビルド | コードを変えるたび |
 | [Live](https://github.com/satsuki19980613/Kagaribi-Stat-Hub/actions/workflows/live.yml) | 本番のサイトに届くか、保護ヘッダが [public/_headers](public/_headers) のとおりか、クラブ順位が読めるか、Mozilla HTTP Observatory の評価が A+ か | 毎週と、配信の設定を変えたとき |
 | [CodeQL](https://github.com/satsuki19980613/Kagaribi-Stat-Hub/actions/workflows/codeql.yml) | GitHub 公式のコードスキャン（危ない書き方が無いか） | コードを変えるたびと毎週 |
-| [Mozilla HTTP Observatory](https://developer.mozilla.org/en-US/observatory/analyze?host=kagaribi-stat-hub.wsk641.workers.dev) | 公開しているサイトの保護ヘッダ。**A+** を保つ（Live が毎週測り、A+ でなければ失敗にする） | リンク先でいつでも測り直せる |
+| [Mozilla HTTP Observatory](https://developer.mozilla.org/en-US/observatory/analyze?host=kagaribi-stat-hub.wsk641.workers.dev) | 公開しているサイトの保護ヘッダ。**A+**（2026-10-10 に、この設定の版を Preview の URL で測定）。Live が毎週測り、A+ でなければ失敗にする | リンク先でいつでも測り直せる |
 
 ### 問題を見つけたら
 
