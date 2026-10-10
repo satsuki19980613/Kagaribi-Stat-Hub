@@ -8,20 +8,22 @@
  * 3. クラブ順位（data/clubs.json）が読めるか
  * 4. Mozilla HTTP Observatory の評価が A+ か
  * どれかが通らなければ失敗で終わる。結果は GitHub の Actions の画面（Summary）にも書く。
+ * Summary（ファイル）には決まった文言だけを書き、届いた値（ヘッダ・エラー・Observatory の数字）はログにだけ出す。
  */
 
 import { appendFileSync, readFileSync } from 'node:fs';
 
 const SITE = (process.env.SITE || 'https://kagaribi-stat-hub.wsk641.workers.dev').replace(/\/+$/, '');
 const OBSERVATORY = 'https://observatory-api.mdn.mozilla.net/api/v2/scan';
+const GRADES = ['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'F'];
 
 const lines = [];
 let failed = false;
+/** label は決まった文言（Summary にも書く）、detail は届いた値（ログにだけ出す）。 */
 function report(ok, label, detail = '') {
   if (!ok) failed = true;
-  const line = `${ok ? '✅' : '❌'} ${label}${detail ? ` — ${detail}` : ''}`;
-  console.log(line);
-  lines.push(`- ${line}`);
+  console.log(`${ok ? '✅' : '❌'} ${label}${detail ? ` — ${detail}` : ''}`);
+  lines.push(`- ${ok ? '✅' : '❌'} ${label}`);
 }
 
 /** public/_headers の「/*」の分（全ページ共通のセキュリティヘッダー）。vite.config.ts の siteHeaders と同じ読み方。 */
@@ -78,10 +80,11 @@ async function checkObservatory() {
     report(false, 'Mozilla HTTP Observatory', String(r.error));
     return;
   }
+  const grade = GRADES.find((g) => g === r.grade) ?? '不明';
   report(
-    r.grade === 'A+',
-    `Mozilla HTTP Observatory ${r.grade}（${r.score} 点、${r.tests_passed}/${r.tests_quantity} 項目合格）`,
-    r.details_url ?? '',
+    grade === 'A+',
+    `Mozilla HTTP Observatory ${grade}（https://developer.mozilla.org/en-US/observatory/analyze?host=${host}）`,
+    `${r.score} 点、${r.tests_passed}/${r.tests_quantity} 項目合格`,
   );
 }
 
@@ -89,7 +92,7 @@ for (const step of [checkSite, checkClubs, checkObservatory]) {
   try {
     await step();
   } catch (e) {
-    report(false, step.name, e instanceof Error ? e.message : String(e));
+    report(false, `${step.name} が止まった`, e instanceof Error ? e.message : String(e));
   }
 }
 
