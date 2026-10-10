@@ -3,9 +3,11 @@
   // アプリは端末ローカル完結の PWA なので、ビルド済みの dist を置くだけで動く。
   // 静的アセットへのリクエストは Worker を起動しない＝無料枠で足りる。
   // Workers Builds のデプロイコマンド `npx wrangler deploy` がこの設定を読む（DEPLOY.md）。
+  // main 以外のブランチ（プルリクエスト）は `npx wrangler preview` で Preview を作る。そのコマンドには previews の欄が要る（中身は空でよい）。
   "name": "kagaribi-stat-hub",
   "compatibility_date": "2024-11-01",
   "assets": {
     "directory": "./dist"
-  }
+  },
+  "previews": {}
 }
