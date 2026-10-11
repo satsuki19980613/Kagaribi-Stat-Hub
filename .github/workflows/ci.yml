@@ -18,7 +18,8 @@ jobs:
         with:
           node-version-file: .node-version
           cache: npm
-      - run: npm ci
+      # 依存パッケージの install スクリプトは走らせない（esbuild などのバイナリは optionalDependencies で入る）
+      - run: npm ci --ignore-scripts
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
