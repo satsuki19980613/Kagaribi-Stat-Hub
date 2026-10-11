@@ -183,8 +183,7 @@ function SeasonModal(props: Readonly<{ no: number; data: AppData; onSave: (o: Se
       )}
 
       <h3>
-        <i className="gem" />開催日（タップで休催／追加開催）
-        <span className="muted num" style={{ marginLeft: 'auto', fontWeight: 600 }}>
+        <i className="gem" />開催日（タップで休催／追加開催）<span className="muted num" style={{ marginLeft: 'auto', fontWeight: 600 }}>
           {days.length} 日
         </span>
       </h3>
