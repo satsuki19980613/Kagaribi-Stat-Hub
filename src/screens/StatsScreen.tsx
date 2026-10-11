@@ -7,7 +7,7 @@ import { MAX_FOCUS, slotOf, type FocusEntry } from '../domain/focus';
 import type { AppData, Member } from '../domain/model';
 import { fmtPt, pointsOf } from '../domain/points';
 import { matchDays, seasonRange } from '../domain/season';
-import { fmtNum, fmtRate, matchCountOf, recordsInRange, summarize } from '../domain/stats';
+import { fmtNum, fmtRate, matchCountOf, recordsInRange, summarize, type Summary } from '../domain/stats';
 import {
   TREND_METRICS,
   clubTotal,
@@ -24,7 +24,7 @@ import {
   type TrendMetric,
 } from '../domain/views';
 import type { ClubState } from '../data/clubData';
-import { CLUB_CAPACITY, OWN_CLUB, latestRound, perMemberSeries } from '../domain/clubRanking';
+import { CLUB_CAPACITY, OWN_CLUB, latestRound, perMemberSeries, type ClubEntry, type ClubRound } from '../domain/clubRanking';
 import { ClubPanel } from './ClubPanel';
 import { SeasonSelect } from './common';
 
@@ -73,15 +73,115 @@ function fmtMetric(metric: TrendMetric, v: number): string {
   }
 }
 
+/** グラフの目盛り。 */
+function fmtTick(metric: TrendMetric, v: number): string {
+  if (metric === 'total') return fmtPt(Math.round(v));
+  if (metric === 'plusRate' || metric === 'winRate') return `${v.toFixed(0)}%`;
+  return String(Number(v.toFixed(1)));
+}
+
+/** ポイントの増減に応じたクラス（+ は gain、− は loss）。 */
+function toneOf(v: number): string {
+  if (v > 0) return 'gain';
+  if (v < 0) return 'loss';
+  return '';
+}
+
+/** 強調メンバーの色クラス（強調していなければ空）。 */
+function slotClass(slot: number | null): string {
+  return slot == null ? '' : ` s${slot + 1}`;
+}
+
+type SortState = { key: SortKey; desc: boolean };
+
+/** 並べ替え中の列の印。名前は昇順が既定なので、▲▼ の向きがほかの列と逆。 */
+function sortMark(sort: SortState, key: SortKey): string {
+  if (sort.key !== key) return '';
+  const up = key === 'name' ? sort.desc : !sort.desc;
+  return up ? ' ▲' : ' ▼';
+}
+
+function ariaSortOf(sort: SortState, key: SortKey): 'descending' | 'ascending' | undefined {
+  if (sort.key !== key) return undefined;
+  return sort.desc ? 'descending' : 'ascending';
+}
+
+function compareRows(sort: SortState): (a: MemberSeasonRow, b: MemberSeasonRow) => number {
+  // 平均順位は小さいほど良いので、「良い順」を既定の向きにそろえる。
+  const dir = sort.key === 'avgRank' || sort.key === 'name' ? !sort.desc : sort.desc;
+  return (a, b) => {
+    const va = sortValue(a, sort.key);
+    const vb = sortValue(b, sort.key);
+    if (va == null && vb == null) return a.member.order - b.member.order;
+    if (va == null) return 1;
+    if (vb == null) return -1;
+    const c = typeof va === 'string' ? va.localeCompare(String(vb), 'ja') : (va as number) - (vb as number);
+    return (dir ? -c : c) || a.member.order - b.member.order;
+  };
+}
+
+type AvgRow = { total: number | null; n: number | null; survival: number | null };
+
+/** メンバー平均（そのシーズンに 1 回以上参加した人で割る）。 */
+function memberAverage(rows: readonly MemberSeasonRow[], club: Summary): AvgRow {
+  const players = rows.filter((r) => r.sum.n > 0);
+  const survs = players.map((r) => r.survival).filter((v): v is number => v != null);
+  return {
+    total: players.length ? club.total / players.length : null,
+    n: players.length ? club.n / players.length : null,
+    survival: survs.length ? survs.reduce((a, b) => a + b, 0) / survs.length : null,
+  };
+}
+
+/** シーズンごとの値を新しい順に（表は新しいシーズンが左）。 */
+function bySeasonDesc(asc: readonly number[], values: readonly (number | null)[]): { no: number; v: number | null }[] {
+  return asc.map((no, i) => ({ no, v: values[i] ?? null })).reverse();
+}
+
+function readCmp(): string {
+  try {
+    return localStorage.getItem(CMP_KEY) ?? '';
+  } catch {
+    return '';
+  }
+}
+
+/** 比べる相手として出せるもの（上位30平均か、最新の節にいるクラブ）。それ以外は ''。 */
+function pickCmp(cmp: string, latest: ClubRound | null, clubs: readonly ClubEntry[]): string {
+  if (cmp === 'avg' && latest) return 'avg';
+  return clubs.some((c) => c.name === cmp) ? cmp : '';
+}
+
+/** 端末に保存してよい値に限る（'' / 'avg' / いまの一覧にあるクラブ名）。一覧に無いときは undefined で、保存しない。 */
+function storableCmp(cmp: string, clubs: readonly ClubEntry[]): string | undefined {
+  if (cmp === '') return '';
+  if (cmp === 'avg') return 'avg';
+  return clubs.find((c) => c.name === cmp)?.name;
+}
+
+/** 他クラブ（1 人あたり）の線。 */
+function cmpLineOf(data: AppData, season: number, cd: ClubState['data'], pick: string, axisLen: number): LineSeries | null {
+  if (!cd || !pick) return null;
+  return {
+    id: '__cmp',
+    name: pick === 'avg' ? '上位30平均' : pick,
+    values: roundsOnAxis(data, season, perMemberSeries(cd, season, pick, axisLen)),
+    slot: 0,
+    tone: 'cmp',
+  };
+}
+
+type Row = Omit<LineSeries, 'slot'> & { slot: number | null };
+const onlyFocused = (xs: Row[]): LineSeries[] => xs.filter((x): x is LineSeries => x.slot != null);
+
 /** 注目メンバーの選択（グラフの凡例を兼ねる）。 */
-function MemberChips(props: { members: Member[]; focus: FocusEntry[]; onToggle: (id: string) => void; onClear: () => void }): JSX.Element {
+function MemberChips(props: Readonly<{ members: Member[]; focus: FocusEntry[]; onToggle: (id: string) => void; onClear: () => void }>): JSX.Element {
   const full = props.focus.length >= MAX_FOCUS;
   return (
     <div className="chips-wrap">
-      <div className="chips" role="group" aria-label="グラフで強調するメンバー">
+      <fieldset className="chips" aria-label="グラフで強調するメンバー">
         <span className="chip legend-avg" title="点線: メンバー平均">
-          <i className="key" />
-          平均
+          <i className="key" />平均
         </span>
         {props.members.map((m) => {
           const slot = slotOf(props.focus, m.id);
@@ -89,7 +189,7 @@ function MemberChips(props: { members: Member[]; focus: FocusEntry[]; onToggle: 
             <button
               key={m.id}
               type="button"
-              className={`chip${slot != null ? ` on s${slot + 1}` : ''}`}
+              className={slot == null ? 'chip' : `chip on s${slot + 1}`}
               aria-pressed={slot != null}
               disabled={slot == null && full}
               onClick={() => props.onToggle(m.id)}
@@ -99,7 +199,7 @@ function MemberChips(props: { members: Member[]; focus: FocusEntry[]; onToggle: 
             </button>
           );
         })}
-      </div>
+      </fieldset>
       <div className="chips-foot">
         <span>
           強調 {props.focus.length} / {MAX_FOCUS}
@@ -114,21 +214,139 @@ function MemberChips(props: { members: Member[]; focus: FocusEntry[]; onToggle: 
   );
 }
 
-export function StatsScreen(props: {
-  data: AppData;
-  club: ClubState;
-  today: string;
-  seasons: number[];
-  season: number;
-  onSeason: (no: number) => void;
-  focus: FocusEntry[];
-  onToggleFocus: (id: string) => void;
-  onClearFocus: () => void;
-  onBack: () => void;
-}): JSX.Element {
+/** メンバー別の表（シーズン内）。いちばん上の行はメンバー平均。 */
+function MembersTable(
+  props: Readonly<{
+    rows: MemberSeasonRow[];
+    sort: SortState;
+    onSort: (key: SortKey) => void;
+    avg: AvgRow;
+    club: Summary;
+    focus: FocusEntry[];
+    onDetail: (m: Member) => void;
+  }>,
+): JSX.Element {
+  const { sort, avg, club } = props;
+  return (
+    <table className="tbl stats">
+      <thead>
+        <tr>
+          <th>
+            <button type="button" className="th-btn" onClick={() => props.onSort('name')}>
+              名前{sortMark(sort, 'name')}
+            </button>
+          </th>
+          {COLS.map((c) => (
+            <th key={c.key} title={c.title} aria-sort={ariaSortOf(sort, c.key)}>
+              <button type="button" className={`th-btn${sort.key === c.key ? ' on' : ''}`} onClick={() => props.onSort(c.key)}>
+                {c.label}
+                {sortMark(sort, c.key)}
+              </button>
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        <tr className="avg-row">
+          <td>
+            <span className="nmcell legend-avg">
+              <i className="key" />メンバー平均
+            </span>
+          </td>
+          <td>{avg.total == null ? '—' : avg.total.toFixed(1)}</td>
+          <td>{fmtNum(club.avg)}</td>
+          <td>{fmtRate(club.plusRate)}</td>
+          <td>{fmtRate(club.winRate)}</td>
+          <td>{fmtNum(club.avgRank)}</td>
+          <td>{fmtNum(avg.n, 1)}</td>
+          <td>{fmtNum(avg.survival, 1)}</td>
+        </tr>
+        {props.rows.map((r) => (
+          <tr key={r.member.id} className={`clk${r.sum.n === 0 ? ' dim' : ''}`} onClick={() => props.onDetail(r.member)}>
+            <td>
+              <span className={`nmcell${slotClass(slotOf(props.focus, r.member.id))}`}>
+                <i className="key" />
+                {r.member.name}
+              </span>
+            </td>
+            <td className={toneOf(r.sum.total)}>{r.sum.n ? fmtPt(r.sum.total) : '—'}</td>
+            <td>{fmtNum(r.sum.avg)}</td>
+            <td>{fmtRate(r.sum.plusRate)}</td>
+            <td>{fmtRate(r.sum.winRate)}</td>
+            <td>{fmtNum(r.sum.avgRank)}</td>
+            <td>{r.sum.n}</td>
+            <td className={r.survivalStale ? 'stale' : ''} title={r.survivalDate ? `${longDate(r.survivalDate)} の値` : undefined}>
+              {fmtNum(r.survival, 1)}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+/** 指標の表（シーズン推移）。新しいシーズンが左。 */
+function TrendTable(
+  props: Readonly<{ asc: number[]; avg: (number | null)[]; series: Row[]; metric: TrendMetric; onDetail: (id: string) => void }>,
+): JSX.Element {
+  const { asc, metric } = props;
+  const cell = (v: number | null): string => (v == null ? '—' : fmtMetric(metric, v));
+  return (
+    <table className="tbl stats">
+      <thead>
+        <tr>
+          <th>名前</th>
+          {[...asc].reverse().map((no) => (
+            <th key={no}>S{no}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        <tr className="avg-row">
+          <td>
+            <span className="nmcell legend-avg">
+              <i className="key" />メンバー平均
+            </span>
+          </td>
+          {bySeasonDesc(asc, props.avg).map(({ no, v }) => (
+            <td key={no}>{cell(v)}</td>
+          ))}
+        </tr>
+        {props.series.map((s) => (
+          <tr key={s.id} className="clk" onClick={() => props.onDetail(s.id)}>
+            <td>
+              <span className={`nmcell${slotClass(s.slot)}`}>
+                <i className="key" />
+                {s.name}
+              </span>
+            </td>
+            {bySeasonDesc(asc, s.values).map(({ no, v }) => (
+              <td key={no}>{cell(v)}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+export function StatsScreen(
+  props: Readonly<{
+    data: AppData;
+    club: ClubState;
+    today: string;
+    seasons: number[];
+    season: number;
+    onSeason: (no: number) => void;
+    focus: FocusEntry[];
+    onToggleFocus: (id: string) => void;
+    onClearFocus: () => void;
+    onBack: () => void;
+  }>,
+): JSX.Element {
   const { data, season, today } = props;
   const [mode, setMode] = useState<Mode>('season');
-  const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({ key: 'total', desc: true });
+  const [sort, setSort] = useState<SortState>({ key: 'total', desc: true });
   const [metric, setMetric] = useState<TrendMetric>('total');
   const [detail, setDetail] = useState<Member | null>(null);
 
@@ -138,64 +356,32 @@ export function StatsScreen(props: {
   const recs = recordsInRange(data.records, range.start, range.end);
   const club = summarize(recs);
   const rows = seasonRows(data, season);
-  // メンバー平均（そのシーズンに 1 回以上参加した人で割る）。
-  const players = rows.filter((r) => r.sum.n > 0);
-  const survs = players.map((r) => r.survival).filter((v): v is number => v != null);
-  const avgRow = {
-    total: players.length ? club.total / players.length : null,
-    n: players.length ? club.n / players.length : null,
-    survival: survs.length ? survs.reduce((a, b) => a + b, 0) / survs.length : null,
-  };
+  const avgRow = memberAverage(rows, club);
   const axis = seasonAxis(data, season);
 
-  // 他クラブ（1 人あたり）との比較。選んだものは端末に覚えておく。
-  const [cmp, setCmp] = useState<string>(() => {
-    try {
-      return localStorage.getItem(CMP_KEY) ?? '';
-    } catch {
-      return '';
-    }
-  });
-  useEffect(() => {
-    try {
-      localStorage.setItem(CMP_KEY, cmp);
-    } catch {
-      /* noop */
-    }
-  }, [cmp]);
+  // 他クラブ（1 人あたり）との比較。選んだものは端末に覚えておく（一覧にある値だけ）。
+  const [cmp, setCmp] = useState<string>(readCmp);
   const cd = props.club.data;
   const cmpLatest = cd ? latestRound(cd, season) : null;
   const cmpClubs = (cmpLatest?.clubs ?? []).filter((c) => c.name !== OWN_CLUB);
-  const cmpPick = cmp === 'avg' && cmpLatest ? 'avg' : cmpClubs.some((c) => c.name === cmp) ? cmp : '';
-  const cmpLine: LineSeries | null =
-    cd && cmpPick
-      ? {
-          id: '__cmp',
-          name: cmpPick === 'avg' ? '上位30平均' : cmpPick,
-          values: roundsOnAxis(data, season, perMemberSeries(cd, season, cmpPick, Math.max(days.length, cmpLatest?.round ?? 0))),
-          slot: 0,
-          tone: 'cmp',
-        }
-      : null;
+  const cmpPick = pickCmp(cmp, cmpLatest, cmpClubs);
+  const cmpStored = storableCmp(cmp, cmpClubs);
+  useEffect(() => {
+    if (cmpStored === undefined) return;
+    try {
+      localStorage.setItem(CMP_KEY, cmpStored);
+    } catch {
+      /* noop */
+    }
+  }, [cmpStored]);
+  const cmpLine = cmpLineOf(data, season, cd, cmpPick, Math.max(days.length, cmpLatest?.round ?? 0));
 
-  const sorted = [...rows].sort((a, b) => {
-    const va = sortValue(a, sort.key);
-    const vb = sortValue(b, sort.key);
-    if (va == null && vb == null) return a.member.order - b.member.order;
-    if (va == null) return 1;
-    if (vb == null) return -1;
-    const c = typeof va === 'string' ? va.localeCompare(String(vb), 'ja') : (va as number) - (vb as number);
-    // 平均順位は小さいほど良いので、「良い順」を既定の向きにそろえる。
-    const dir = sort.key === 'avgRank' || sort.key === 'name' ? !sort.desc : sort.desc;
-    return (dir ? -c : c) || a.member.order - b.member.order;
-  });
+  const sorted = [...rows].sort(compareRows(sort));
 
   function onSort(key: SortKey): void {
     setSort((s) => (s.key === key ? { key, desc: !s.desc } : { key, desc: true }));
   }
 
-  type Row = Omit<LineSeries, 'slot'> & { slot: number | null };
-  const onlyFocused = (xs: Row[]): LineSeries[] => xs.filter((x): x is LineSeries => x.slot != null);
   const seasonSeries: Row[] = rows.map((r) => ({
     id: r.member.id,
     name: r.member.name,
@@ -224,14 +410,14 @@ export function StatsScreen(props: {
     <div className="pane wide">
       <Back label="MENU" onClick={props.onBack} />
       <PaneHead eyebrow="STATS" title="スタッツ" />
-      <div className="seg" role="group" aria-label="表示">
+      <fieldset className="seg" aria-label="表示">
         <button type="button" aria-pressed={mode === 'season'} onClick={() => setMode('season')}>
           シーズン内
         </button>
         <button type="button" aria-pressed={mode === 'trend'} onClick={() => setMode('trend')}>
           シーズン推移
         </button>
-      </div>
+      </fieldset>
 
       {mode === 'season' && (
         <>
@@ -328,64 +514,7 @@ export function StatsScreen(props: {
               </span>
             </div>
             <ScrollBox className="tbl-scroll fixed">
-              <table className="tbl stats">
-                <thead>
-                  <tr>
-                    <th>
-                      <button type="button" className="th-btn" onClick={() => onSort('name')}>
-                        名前{sort.key === 'name' ? (sort.desc ? ' ▲' : ' ▼') : ''}
-                      </button>
-                    </th>
-                    {COLS.map((c) => (
-                      <th key={c.key} title={c.title} aria-sort={sort.key === c.key ? (sort.desc ? 'descending' : 'ascending') : undefined}>
-                        <button type="button" className={`th-btn${sort.key === c.key ? ' on' : ''}`} onClick={() => onSort(c.key)}>
-                          {c.label}
-                          {sort.key === c.key ? (sort.desc ? ' ▼' : ' ▲') : ''}
-                        </button>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="avg-row">
-                    <td>
-                      <span className="nmcell legend-avg">
-                        <i className="key" />
-                        メンバー平均
-                      </span>
-                    </td>
-                    <td>{avgRow.total == null ? '—' : avgRow.total.toFixed(1)}</td>
-                    <td>{fmtNum(club.avg)}</td>
-                    <td>{fmtRate(club.plusRate)}</td>
-                    <td>{fmtRate(club.winRate)}</td>
-                    <td>{fmtNum(club.avgRank)}</td>
-                    <td>{fmtNum(avgRow.n, 1)}</td>
-                    <td>{fmtNum(avgRow.survival, 1)}</td>
-                  </tr>
-                  {sorted.map((r) => {
-                    const slot = slotOf(props.focus, r.member.id);
-                    return (
-                      <tr key={r.member.id} className={`clk${r.sum.n === 0 ? ' dim' : ''}`} onClick={() => setDetail(r.member)}>
-                        <td>
-                          <span className={`nmcell${slot != null ? ` s${slot + 1}` : ''}`}>
-                            <i className="key" />
-                            {r.member.name}
-                          </span>
-                        </td>
-                        <td className={r.sum.total > 0 ? 'gain' : r.sum.total < 0 ? 'loss' : ''}>{r.sum.n ? fmtPt(r.sum.total) : '—'}</td>
-                        <td>{fmtNum(r.sum.avg)}</td>
-                        <td>{fmtRate(r.sum.plusRate)}</td>
-                        <td>{fmtRate(r.sum.winRate)}</td>
-                        <td>{fmtNum(r.sum.avgRank)}</td>
-                        <td>{r.sum.n}</td>
-                        <td className={r.survivalStale ? 'stale' : ''} title={r.survivalDate ? `${longDate(r.survivalDate)} の値` : undefined}>
-                          {fmtNum(r.survival, 1)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <MembersTable rows={sorted} sort={sort} onSort={onSort} avg={avgRow} club={club} focus={props.focus} onDetail={setDetail} />
             </ScrollBox>
           </section>
 
@@ -425,7 +554,7 @@ export function StatsScreen(props: {
               average={trendAvg}
               format={(v) => fmtMetric(metric, v)}
               zero={metric === 'total' || metric === 'avg'}
-              tickFormat={(v) => (metric === 'total' ? fmtPt(Math.round(v)) : metric === 'plusRate' || metric === 'winRate' ? `${v.toFixed(0)}%` : String(Number(v.toFixed(1))))}
+              tickFormat={(v) => fmtTick(metric, v)}
               markers
               ariaLabel={`${metricInfo.label}のシーズン推移`}
               empty={metric === 'survival' ? 'シーズン中に入力したスタッツがありません' : undefined}
@@ -439,42 +568,13 @@ export function StatsScreen(props: {
               <span className="rt">{metricInfo.unit}</span>
             </div>
             <ScrollBox className="tbl-scroll fixed">
-              <table className="tbl stats">
-                <thead>
-                  <tr>
-                    <th>名前</th>
-                    {[...asc].reverse().map((no) => (
-                      <th key={no}>S{no}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="avg-row">
-                    <td>
-                      <span className="nmcell legend-avg">
-                        <i className="key" />
-                        メンバー平均
-                      </span>
-                    </td>
-                    {[...trendAvg].reverse().map((v, i) => (
-                      <td key={i}>{v == null ? '—' : fmtMetric(metric, v)}</td>
-                    ))}
-                  </tr>
-                  {trendSeries.map((s) => (
-                    <tr key={s.id} className="clk" onClick={() => setDetail(trendMembers.find((m) => m.id === s.id) ?? null)}>
-                      <td>
-                        <span className={`nmcell${s.slot != null ? ` s${s.slot + 1}` : ''}`}>
-                          <i className="key" />
-                          {s.name}
-                        </span>
-                      </td>
-                      {[...s.values].reverse().map((v, i) => (
-                        <td key={i}>{v == null ? '—' : fmtMetric(metric, v)}</td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <TrendTable
+                asc={asc}
+                avg={trendAvg}
+                series={trendSeries}
+                metric={metric}
+                onDetail={(id) => setDetail(trendMembers.find((m) => m.id === id) ?? null)}
+              />
             </ScrollBox>
           </section>
 
@@ -503,11 +603,12 @@ export function StatsScreen(props: {
 }
 
 /** メンバーの詳細（通算・順位分布・シーズン別）。 */
-function MemberDetail(props: { member: Member; data: AppData; onClose: () => void }): JSX.Element {
+function MemberDetail(props: Readonly<{ member: Member; data: AppData; onClose: () => void }>): JSX.Element {
   const { member, data } = props;
   const mine = data.records.filter((r) => r.memberId === member.id);
   const all = summarize(mine);
   const maxDist = Math.max(1, ...all.dist);
+  const dist = all.dist.map((count, i) => ({ rank: i + 1, count }));
   const seasons = seasonsOfMember(data, member.id).reverse();
   const recent = [...mine].sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, 10);
 
@@ -538,13 +639,12 @@ function MemberDetail(props: { member: Member; data: AppData; onClose: () => voi
       </p>
 
       <h3>
-        <i className="gem" />
-        順位の分布
+        <i className="gem" />順位の分布
       </h3>
       <div className="dist">
-        {all.dist.map((c, i) => (
-          <div key={i} className="dist-row">
-            <span className={`rkb r${i + 1}`}>{i + 1}</span>
+        {dist.map(({ rank, count: c }) => (
+          <div key={rank} className="dist-row">
+            <span className={`rkb r${rank}`}>{rank}</span>
             <span className="dist-bar">
               <i style={{ width: `${(c / maxDist) * 100}%` }} />
             </span>
@@ -557,8 +657,7 @@ function MemberDetail(props: { member: Member; data: AppData; onClose: () => voi
       </div>
 
       <h3>
-        <i className="gem" />
-        シーズン別
+        <i className="gem" />シーズン別
       </h3>
       {seasons.length === 0 ? (
         <p>まだ記録がありません。</p>
@@ -584,7 +683,7 @@ function MemberDetail(props: { member: Member; data: AppData; onClose: () => voi
                 return (
                   <tr key={no}>
                     <td>S{no}</td>
-                    <td className={row.sum.total > 0 ? 'gain' : row.sum.total < 0 ? 'loss' : ''}>{fmtPt(row.sum.total)}</td>
+                    <td className={toneOf(row.sum.total)}>{fmtPt(row.sum.total)}</td>
                     <td>{fmtNum(row.sum.avg)}</td>
                     <td>{fmtRate(row.sum.plusRate)}</td>
                     <td>{fmtRate(row.sum.winRate)}</td>
@@ -602,8 +701,7 @@ function MemberDetail(props: { member: Member; data: AppData; onClose: () => voi
       {recent.length > 0 && (
         <>
           <h3>
-            <i className="gem" />
-            最近の記録
+            <i className="gem" />最近の記録
           </h3>
           <ul className="mini-recs">
             {recent.map((r) => (
