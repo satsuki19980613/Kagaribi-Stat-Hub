@@ -52,8 +52,9 @@ export function summarize(records: readonly MatchRecord[]): Summary {
 
 /** スナップショット 1 件から生存ターン数。必要な値が揃っていなければ null。 */
 export function survivalOf(s: Pick<StatSnapshot, 'matches' | 'vpip' | 'hands'> | undefined): number | null {
-  if (!s || s.vpip == null || s.hands == null) return null;
-  if (!(s.matches > 0) || !(s.vpip > 0) || !(s.hands >= 0)) return null;
+  if (s?.vpip == null || s.hands == null) return null;
+  // NaN も弾く（比較が false になる向きで書く）
+  if (Number.isNaN(s.matches + s.vpip + s.hands) || s.matches <= 0 || s.vpip <= 0 || s.hands < 0) return null;
   return s.hands / (s.matches * (s.vpip / 100));
 }
 

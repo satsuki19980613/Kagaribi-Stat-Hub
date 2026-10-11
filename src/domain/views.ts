@@ -2,7 +2,7 @@
  * スタッツビューが使う表・グラフの元データ（純関数）。
  */
 
-import { parseIso } from './date';
+import { compareIso, parseIso } from './date';
 import type { AppData, Member } from './model';
 import { matchDays, seasonOf, seasonRange } from './season';
 import { cumulativeSeries, latestSurvivalSnapshot, recordsInRange, summarize, survivalOf, type Summary } from './stats';
@@ -49,7 +49,7 @@ export function seasonAxis(data: AppData, no: number): string[] {
   const r = seasonRange(no, data.seasons);
   const days = new Set(matchDays(no, data.seasons));
   for (const x of recordsInRange(data.records, r.start, r.end)) days.add(x.date);
-  return [...days].sort();
+  return [...days].sort(compareIso);
 }
 
 /** 累積ポイントの推移（今日より先は伸ばさない）。 */

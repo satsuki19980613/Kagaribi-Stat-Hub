@@ -56,24 +56,25 @@ export function planSave(records: readonly MatchRecord[], date: string, draft: D
   for (const r of records) if (r.date === date) existing.set(r.memberId, r);
   const plan: SavePlan = { puts: [], deletes: [], added: 0, updated: 0 };
   const ids = new Set([...existing.keys(), ...Object.keys(draft)]);
-  for (const memberId of ids) {
-    const row = draft[memberId];
-    const cur = existing.get(memberId);
-    if (!row || row.rank == null) {
-      if (cur) plan.deletes.push(cur);
-      continue;
-    }
-    const part = row.part ?? undefined;
-    if (!cur) {
-      plan.puts.push({ id: newId(), memberId, date, rank: row.rank, ...(part ? { part } : {}), createdAt: now, updatedAt: now });
-      plan.added += 1;
-    } else if (cur.rank !== row.rank || cur.part !== part) {
-      const { part: _old, ...rest } = cur;
-      plan.puts.push({ ...rest, rank: row.rank, ...(part ? { part } : {}), updatedAt: now });
-      plan.updated += 1;
-    }
-  }
+  for (const memberId of ids) planRow(plan, memberId, existing.get(memberId), draft[memberId], date, now);
   return plan;
+}
+
+/** 1 人ぶん: 順位が無ければ消す、無かった記録は足す、変わった記録は書き換える。 */
+function planRow(plan: SavePlan, memberId: string, cur: MatchRecord | undefined, row: DraftRow | undefined, date: string, now: number): void {
+  if (row?.rank == null) {
+    if (cur) plan.deletes.push(cur);
+    return;
+  }
+  const part = row.part ?? undefined;
+  if (!cur) {
+    plan.puts.push({ id: newId(), memberId, date, rank: row.rank, ...(part ? { part } : {}), createdAt: now, updatedAt: now });
+    plan.added += 1;
+  } else if (cur.rank !== row.rank || cur.part !== part) {
+    const { part: _old, ...rest } = cur;
+    plan.puts.push({ ...rest, rank: row.rank, ...(part ? { part } : {}), updatedAt: now });
+    plan.updated += 1;
+  }
 }
 
 export function planIsEmpty(p: SavePlan): boolean {

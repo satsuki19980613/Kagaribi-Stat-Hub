@@ -70,6 +70,8 @@ export interface AppData {
 }
 
 export function newId(): string {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  // randomUUID は安全なコンテキスト（https / localhost）だけ。それ以外は getRandomValues で作る。
+  const r = crypto.getRandomValues(new Uint32Array(2));
+  return `${Date.now().toString(36)}-${Array.from(r, (n) => n.toString(36)).join('')}`;
 }

@@ -6,16 +6,25 @@ import { seasonRange } from '../domain/season';
 import { Back, ConfirmDialog, PaneHead } from '../components/ui';
 import { SeasonSelect } from './common';
 
+/** ポイントの増減に応じたクラス（+ は gain、− は loss）。 */
+function toneOf(v: number): string {
+  if (v > 0) return 'gain';
+  if (v < 0) return 'loss';
+  return '';
+}
+
 /** 記録履歴。シーズンごとに日付でまとめて並べる。日付を開くと記録画面で修正、× で 1 件削除。 */
-export function HistoryScreen(props: {
-  data: AppData;
-  seasons: number[];
-  season: number;
-  onSeason: (no: number) => void;
-  onOpenDate: (date: string) => void;
-  onDelete: (rec: MatchRecord) => void;
-  onBack: () => void;
-}): JSX.Element {
+export function HistoryScreen(
+  props: Readonly<{
+    data: AppData;
+    seasons: number[];
+    season: number;
+    onSeason: (no: number) => void;
+    onOpenDate: (date: string) => void;
+    onDelete: (rec: MatchRecord) => void;
+    onBack: () => void;
+  }>,
+): JSX.Element {
   const { data, season } = props;
   const [del, setDel] = useState<MatchRecord | null>(null);
   const range = seasonRange(season, data.seasons);
@@ -24,7 +33,7 @@ export function HistoryScreen(props: {
   const inSeason = data.records.filter((r) => r.date >= range.start && r.date <= range.end);
   const byDate = new Map<string, MatchRecord[]>();
   for (const r of inSeason) byDate.set(r.date, [...(byDate.get(r.date) ?? []), r]);
-  const dates = [...byDate.keys()].sort().reverse();
+  const dates = [...byDate.keys()].sort((a, b) => a.localeCompare(b)).reverse();
 
   return (
     <div className="pane">
@@ -58,7 +67,7 @@ export function HistoryScreen(props: {
                         <span className={`rkb r${r.rank}`}>{r.rank}</span>
                         <span className="nm">{name.get(r.memberId) ?? '（不明）'}</span>
                       </span>
-                      <span className={`rec-vd ${pointsOf(r.rank) > 0 ? 'gain' : pointsOf(r.rank) < 0 ? 'loss' : ''}`}>{fmtPt(pointsOf(r.rank))}pt</span>
+                      <span className={`rec-vd ${toneOf(pointsOf(r.rank))}`}>{fmtPt(pointsOf(r.rank))}pt</span>
                       {r.part && <span className="rec-sub">{r.part}部</span>}
                     </div>
                     <button type="button" className="rec-x" aria-label="この記録を削除" onClick={() => setDel(r)} />

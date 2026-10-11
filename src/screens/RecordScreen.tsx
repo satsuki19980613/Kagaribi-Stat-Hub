@@ -22,12 +22,19 @@ function nearMatchDay(date: string, dir: 1 | -1, data: AppData): string | null {
   return null;
 }
 
+/** ポイントの色分けのクラス（プラスは gain、マイナスは loss、0 は無し）。 */
+function pointsTone(pt: number): string {
+  if (pt > 0) return 'gain';
+  if (pt < 0) return 'loss';
+  return '';
+}
+
 /**
  * 記録画面。日付を選び、その日に参加したメンバーの順位をタップする（得点は順位から自動）。
  * 既に記録がある日はその内容が入った状態で開くので、そのまま修正・取り消しができる。
  * 1人 1日 1件なので二重記録は起きない。
  */
-export function RecordScreen(props: {
+export function RecordScreen(props: Readonly<{
   data: AppData;
   entry: Entry;
   today: string;
@@ -37,7 +44,7 @@ export function RecordScreen(props: {
   onBack: () => void;
   onHistory: () => void;
   onMembers: () => void;
-}): JSX.Element {
+}>): JSX.Element {
   const { data, entry } = props;
   const { date, draft } = entry;
   const [pendingDate, setPendingDate] = useState<string | null>(null);
@@ -158,7 +165,7 @@ export function RecordScreen(props: {
                     <b>{m.name}</b>
                     <span className="ent-sub">
                       {row.rank != null ? (
-                        <span className={`num ${pointsOf(row.rank) > 0 ? 'gain' : pointsOf(row.rank) < 0 ? 'loss' : ''}`}>{fmtPt(pointsOf(row.rank))}pt</span>
+                        <span className={`num ${pointsTone(pointsOf(row.rank))}`}>{fmtPt(pointsOf(row.rank))}pt</span>
                       ) : (
                         <span className="muted">不参加</span>
                       )}
@@ -167,8 +174,8 @@ export function RecordScreen(props: {
                       {m.archived && <span className="mtag">アーカイブ</span>}
                     </span>
                     {row.rank != null && (
-                      <span className="ent-tools">
-                        <span className="partsel" role="group" aria-label="部">
+                      <div className="ent-tools">
+                        <fieldset className="partsel" aria-label="部">
                           {([1, 2] as Part[]).map((p) => (
                             <button
                               key={p}
@@ -179,17 +186,17 @@ export function RecordScreen(props: {
                               {p}部
                             </button>
                           ))}
-                        </span>
+                        </fieldset>
                         <StatToggle
                           open={openStats.has(m.id)}
                           has={!!row.stats && !isBlankStat(row.stats)}
                           error={!!day.stats.issues[m.id]}
                           onClick={() => toggleStats(m.id)}
                         />
-                      </span>
+                      </div>
                     )}
                   </div>
-                  <div className="ranks" role="group" aria-label={`${m.name} の順位`}>
+                  <fieldset className="ranks" aria-label={`${m.name} の順位`}>
                     {RANKS.map((r) => (
                       <button
                         key={r}
@@ -202,7 +209,7 @@ export function RecordScreen(props: {
                         {r}
                       </button>
                     ))}
-                  </div>
+                  </fieldset>
                   {row.rank != null && openStats.has(m.id) && (
                     <StatDrawer
                       member={m}
@@ -233,8 +240,7 @@ export function RecordScreen(props: {
               'スタッツの入力を確認してください'
             ) : (
               <>
-                保存
-                <small>
+                保存<small>
                   追加 {plan.added} · 修正 {plan.updated} · 取消 {deletes}
                   {statN > 0 && ` · スタッツ ${statN}`}
                 </small>
@@ -280,7 +286,7 @@ function snapshotText(data: AppData, memberId: string, date: string): StatText {
 }
 
 /** 行の中の小さな切り替え。入力が無いときは点線で控えめに「任意」と見せる。 */
-function StatToggle(props: { open: boolean; has: boolean; error: boolean; onClick: () => void }): JSX.Element {
+function StatToggle(props: Readonly<{ open: boolean; has: boolean; error: boolean; onClick: () => void }>): JSX.Element {
   return (
     <button
       type="button"
@@ -295,14 +301,14 @@ function StatToggle(props: { open: boolean; has: boolean; error: boolean; onClic
 }
 
 /** 任意のスタッツ入力（優勝回数・VPIP・参加ハンド数）。前回の値を薄く見せ、空欄のままでよいことを伝える。 */
-function StatDrawer(props: {
+function StatDrawer(props: Readonly<{
   member: Member;
   data: AppData;
   date: string;
   value: StatText;
   issues: string[];
   onChange: (v: StatText) => void;
-}): JSX.Element {
+}>): JSX.Element {
   const { member, data, date, value } = props;
   const matches = matchesOnDay(member, data.records, date, true);
   const prev = latestSnapshot(

@@ -20,6 +20,9 @@
   --f-num:"Nunito","Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
   --ease:cubic-bezier(.2,.8,.2,1);
   --sab:max(env(safe-area-inset-bottom,0px),env(safe-area-max-inset-bottom,0px));
+  /* 系列色（カテゴリ 8 色・固定順。ライト／ダークで段を選び直してある）・燎・比べる他クラブ */
+  --s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300;--s7:#4a3aa7;--s8:#e34948;
+  --own:#d6336c; --cmp:#7c4dde;
   color-scheme:light;
 }
 :root[data-theme="dark"]{
@@ -36,21 +39,26 @@
   --gd-bg:linear-gradient(160deg,rgba(44,48,58,.62),rgba(14,16,21,.6));--gd-edge:rgba(255,255,255,.16);--gd-line:rgba(255,255,255,.08);
   --gd-shadow:0 40px 80px -30px rgba(0,0,0,.85);--gd-veil:rgba(0,0,0,.32);
   --cell:rgba(255,255,255,.04); --cell-pair:rgba(255,255,255,.08); --cell-ink:#8B919D;
+  --s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300;--s7:#9085e9;--s8:#e66767;
+  --own:#f06595; --cmp:#b197fc;
   color-scheme:dark;
 }
 
 /* ===== base（角はすべて直角） ===== */
 *,*::before,*::after{box-sizing:border-box;border-radius:0}
 html,body{height:100%;margin:0;overflow:hidden}
-html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;text-size-adjust:100%}
-html{background:var(--bg)}
-body{background:transparent;color:var(--ink);font-family:var(--f-ui);-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;text-size-adjust:100%;background:var(--bg)}
+body{background:transparent;color:var(--ink);font-family:var(--f-ui);-webkit-font-smoothing:antialiased;overscroll-behavior:none;
+  /* 日本語は文節で折り返す（語尾 1〜2 文字だけが次の行へ落ちないように） */
+  word-break:auto-phrase}
 /* 背景: 炎（WebGL）→ その上にライト／ダークのベール。ぼんやり透けて揺らめいて見える */
 .fire{position:fixed;inset:0;width:100%;height:100%;z-index:-2;pointer-events:none;opacity:var(--fire-op);filter:blur(.6px) saturate(115%) hue-rotate(var(--fire-hue,0deg))}
 .veil{position:fixed;inset:0;z-index:-1;pointer-events:none;background:var(--veil);
   -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
 button{font:inherit;color:inherit;touch-action:manipulation}
 a{color:inherit}
+/* 選択肢のまとまり（順位・部）は fieldset。既定の枠・余白は使わない */
+fieldset{margin:0;padding:0;border:0;min-inline-size:0}
 button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--you);outline-offset:2px}
 .eyebrow{font-family:var(--f-num);font-size:11px;font-weight:600;letter-spacing:.16em;color:var(--muted)}
 .num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
@@ -59,7 +67,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
 #root{height:100%}
 .app{height:100vh;height:100dvh;height:var(--app-h,100dvh);display:grid;grid-template-rows:auto minmax(0,1fr) auto;overflow:hidden;
   padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) var(--sab) env(safe-area-inset-left,0px)}
-.top{position:relative;z-index:3;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;padding:10px clamp(12px,3vw,32px);-webkit-user-select:none;user-select:none}
+.top{position:relative;z-index:3;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;padding:10px clamp(16px,3vw,32px);-webkit-user-select:none;user-select:none}
 .brand{display:flex;align-items:center;gap:8px;font-family:var(--f-num);font-weight:600;font-size:16px;letter-spacing:-.01em;white-space:nowrap;min-width:0}
 .brand svg{width:20px;height:20px;flex:none}
 @media (max-width:400px){.top{grid-template-columns:auto 1fr auto;gap:8px}.navpill{justify-self:center}.brand{font-size:14px;gap:6px}.brand svg{width:17px;height:17px}.nbtn{min-width:0;padding:0 14px}}
@@ -156,7 +164,7 @@ select.tin option{background:var(--face);color:var(--ink)}
 /* ===== panel ===== */
 .panel{border:1px solid var(--smoke-edge);background:var(--smoke);box-shadow:var(--smoke-shadow);padding:14px;display:grid;gap:10px;min-width:0;
   -webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%)}
-.panel-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.panel-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:10px}
 .panel-h .rt{font-size:11px;color:var(--muted);font-family:var(--f-num);letter-spacing:.06em}
 .gem{display:inline-block;width:8px;height:8px;transform:rotate(45deg);flex:none;background:linear-gradient(135deg,#fff,var(--you) 65%)}
 .gem.c{background:linear-gradient(135deg,#fff,var(--cpu) 65%)}
@@ -195,7 +203,7 @@ select.tin option{background:var(--face);color:var(--ink)}
 .recs{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .rec{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:stretch;background:var(--smoke);border:1px solid var(--smoke-edge);box-shadow:var(--smoke-shadow);
   -webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%)}
-.rec-main{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:baseline;text-align:left;padding:10px 4px 10px 14px;background:none;border:0;cursor:default;min-width:0;color:var(--ink)}
+.rec-main{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:baseline;text-align:left;padding:10px 10px 10px 14px;background:none;border:0;cursor:default;min-width:0;color:var(--ink)}
 button.rec-main{cursor:pointer}
 @media (hover:hover){.rec:has(button.rec-main:hover){border-color:var(--hair-2);background:var(--glass)}}
 .rec-hand{font-family:var(--f-num);font-weight:600;font-size:20px;letter-spacing:-.02em;display:flex;align-items:baseline;gap:10px;min-width:0}
@@ -252,10 +260,12 @@ dialog:focus,dialog:focus-visible{outline:none}
 
 /* ===== トースト ===== */
 .toast{position:fixed;left:50%;bottom:calc(var(--sab) + 28px);transform:translate(-50%,0);z-index:80;max-width:min(92vw,440px);width:max-content;
-  display:flex;align-items:center;gap:14px;padding:10px 10px 10px 16px;color:var(--ink);font-weight:700;font-size:13px;cursor:pointer;
+  display:flex;align-items:center;gap:14px;padding:10px 10px 10px 16px;color:var(--ink);font-weight:700;font-size:13px;
   background:linear-gradient(160deg,var(--glass-hi),var(--glass-lo)),var(--pop-bg);-webkit-backdrop-filter:blur(22px) saturate(160%);backdrop-filter:blur(22px) saturate(160%);
   border:1px solid var(--edge);border-left:3px solid var(--you);box-shadow:var(--shadow),inset 0 1px 0 var(--edge);animation:toastIn .3s var(--ease) both}
 .toast.err{border-left-color:var(--cpu)}
+/* 本文は 1 つのボタン。左・上・下の余白と × までの隙間も押せるように広げる */
+.toast .t-body{display:flex;align-items:center;gap:14px;flex:1;min-width:0;align-self:stretch;margin:-10px -14px -10px -16px;padding:10px 14px 10px 16px;border:0;background:none;text-align:left;cursor:pointer}
 .toast .go{font-family:var(--f-num);font-size:11px;letter-spacing:.14em;color:var(--muted);white-space:nowrap}
 .toast .tx{position:relative;width:28px;height:28px;flex:none;border:0;background:none;cursor:pointer;color:var(--muted)}
 .toast .tx::before,.toast .tx::after{content:"";position:absolute;left:50%;top:50%;width:11px;height:1.5px;background:currentColor;transform:translate(-50%,-50%) rotate(45deg)}
@@ -297,10 +307,6 @@ button.brand{border:0;background:none;padding:0;color:inherit;cursor:pointer}
 .subrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 .subrow .btn{flex:1 1 0}
 
-/* 系列色（カテゴリ 8 色・固定順。ライト／ダークで段を選び直してある） */
-:root{--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300;--s7:#4a3aa7;--s8:#e34948}
-:root[data-theme="dark"]{--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300;--s7:#9085e9;--s8:#e66767}
-:root{--own:#d6336c}:root[data-theme="dark"]{--own:#f06595}
 .own{--c:var(--own)}
 .s1{--c:var(--s1)}.s2{--c:var(--s2)}.s3{--c:var(--s3)}.s4{--c:var(--s4)}.s5{--c:var(--s5)}.s6{--c:var(--s6)}.s7{--c:var(--s7)}.s8{--c:var(--s8)}
 
@@ -354,7 +360,7 @@ button.brand{border:0;background:none;padding:0;color:inherit;cursor:pointer}
 
 /* ===== 履歴 ===== */
 .day{display:grid;gap:6px}
-.day-h{display:flex;align-items:baseline;gap:10px;border:0;background:none;padding:8px 2px 0;color:var(--ink);cursor:pointer;text-align:left}
+.day-h{display:flex;align-items:center;min-height:36px;gap:10px;border:0;background:none;padding:8px 2px 0;color:var(--ink);cursor:pointer;text-align:left}
 .day-h b{font-family:var(--f-num);font-size:15px}
 .day-h .num{font-size:12px;color:var(--muted);font-weight:600}
 .day-h .go{margin-left:auto;font-family:var(--f-num);font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--muted)}
@@ -371,16 +377,18 @@ button.brand{border:0;background:none;padding:0;color:inherit;cursor:pointer}
 .survprev b{font-size:22px;letter-spacing:-.02em}
 .survprev .hint{flex-basis:100%}
 .gd-scroll .hint{margin:6px 0 0}
-.x-sm{position:relative;width:26px;height:26px;border:0;background:none;cursor:pointer;color:var(--muted);vertical-align:middle}
+.x-sm{position:relative;width:32px;height:32px;border:0;background:none;cursor:pointer;color:var(--muted);vertical-align:middle}
 .x-sm::before,.x-sm::after{content:"";position:absolute;left:50%;top:50%;width:10px;height:1.5px;background:currentColor;transform:translate(-50%,-50%) rotate(45deg)}
 .x-sm::after{transform:translate(-50%,-50%) rotate(-45deg)}
 @media (hover:hover){.x-sm:hover{color:var(--cpu-text)}}
 
 /* ===== スタッツ ===== */
-.tbl-scroll{overflow-x:auto;margin:0 -14px;padding:0 14px;-webkit-overflow-scrolling:touch}
+/* 横スクロールする表は、固定の先頭列とほかの列を同じ不透明な面に載せる（モーダル内も） */
+.tbl-scroll{overflow-x:auto;margin:0 -14px;padding:0 14px;-webkit-overflow-scrolling:touch;background:var(--face)}
 .tbl.stats{width:max-content;min-width:100%}
 .tbl.stats th,.tbl.stats td{white-space:nowrap}
-.tbl.stats th:first-child,.tbl.stats td:first-child{position:sticky;left:-14px;z-index:1;background:var(--face);padding-left:14px;box-shadow:1px 0 0 var(--hair)}
+/* 名前の列は固定して、幅は中身の分だけ（余った幅は数値の列へ） */
+.tbl.stats th:first-child,.tbl.stats td:first-child{position:sticky;left:-14px;z-index:1;background:var(--face);padding-left:14px;box-shadow:1px 0 0 var(--hair);width:1%}
 .tbl.stats tr.clk{cursor:pointer}
 @media (hover:hover){.tbl.stats tr.clk:hover td{background:var(--glass-lo)}.tbl.stats tr.clk:hover td:first-child{background:var(--face)}}
 .tbl.stats tr.dim td{opacity:.55}
@@ -394,7 +402,7 @@ button.brand{border:0;background:none;padding:0;color:inherit;cursor:pointer}
 .nmcell.legend-avg .key{width:14px}
 .tbl.stats tr.avg-row td{font-weight:700;color:var(--ink);border-bottom:1px solid var(--hair-2)}
 /* 人数が増えてもパネルの高さは変えず、表の中でスクロールする（見出し行と名前の列は固定） */
-.tbl-scroll.fixed{max-height:min(440px,60dvh);overflow:auto;overscroll-behavior:contain}
+.tbl-scroll.fixed{max-height:min(440px,60dvh);overflow:auto;overscroll-behavior:contain;background:var(--face)}
 .tbl-scroll.fixed .tbl.stats thead th{position:sticky;top:0;z-index:2;background:var(--face)}
 .tbl-scroll.fixed .tbl.stats thead th:first-child{z-index:3}
 .gd-scroll .tbl-scroll{margin:0 -22px;padding:0 22px}
@@ -404,10 +412,9 @@ button.brand{border:0;background:none;padding:0;color:inherit;cursor:pointer}
 .chips-wrap{display:grid;gap:6px}
 .chips{display:flex;flex-wrap:nowrap;gap:4px;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;
   margin:0 -14px;padding:2px 14px 8px;scroll-padding:0 14px}
-.chip{flex:none}
 .chip.legend-avg{cursor:default;border-style:dashed;color:var(--ink-2);position:sticky;left:-14px;z-index:1;background:var(--face)}
 .chips .chip.legend-avg .key{width:14px}
-.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--hair-2);background:transparent;color:var(--ink-2);font-size:12px;font-weight:700;padding:4px 9px;cursor:pointer;max-width:12em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip{flex:none;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--hair-2);background:transparent;color:var(--ink-2);font-size:12px;font-weight:700;padding:4px 9px;cursor:pointer;max-width:12em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chip:not(.on) .key{width:0}
 .chip.on{border-color:var(--c);color:var(--ink);background:var(--glass-hi)}
 .chip:disabled{opacity:.4;cursor:default}
@@ -460,7 +467,7 @@ button.brand{border:0;background:none;padding:0;color:inherit;cursor:pointer}
 .cal-key{display:inline-block;width:10px;height:10px;vertical-align:-1px;border:1px solid var(--hair-2)}
 .cal-key.on{background:var(--ink)}
 .cal-key.changed{box-shadow:inset 0 0 0 2px var(--cpu)}
-.cal-key.has{background:var(--you);width:6px;height:6px}
+.cal-key.has{background:var(--you);width:6px;height:6px;vertical-align:1px}
 .demo-note{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
 .demo-note .lnk{padding:0;margin-left:auto}
 .demo-note .btn{margin-left:auto}
@@ -506,22 +513,15 @@ button.brand{border:0;background:none;padding:0;color:inherit;cursor:pointer}
 @media (pointer:coarse){.stat-tg,.partsel button{min-height:28px}.stat-tg{padding:4px 9px}}
 
 /* ===== 画面サイズ QA の修正 ===== */
-/* 日本語は文節で折り返す（語尾 1〜2 文字だけが次の行へ落ちないように） */
-body{word-break:auto-phrase}
 p,.hint,.notice,small,.mbtn small{text-wrap:pretty}
 .nw{white-space:nowrap}
 .menu-note{text-align:center;margin-top:6px}
-.panel-h{flex-wrap:wrap}
 .panel-h b{white-space:nowrap}
 @media (max-width:360px){.fgrid:not(.three){grid-template-columns:1fr}}
-.x-sm{width:32px;height:32px}
 .gd-scroll .btn.wide{margin-top:8px}
-/* 高さ固定の表: 名前の列と数値の列で背景をそろえ、続きがある間は下端をぼかす */
-.tbl-scroll.fixed{background:var(--face)}
+/* 高さ固定の表: 続きがある間は下端をぼかす */
 .tbl-scroll.fixed.more{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 36px),transparent)}
 @media (pointer:coarse){.stat-tg,.partsel button{min-height:32px}.partsel button{min-width:36px}}
-/* 表の名前の列は中身の幅だけ（余った幅は数値の列へ） */
-.tbl.stats th:first-child,.tbl.stats td:first-child{width:1%}
 /* 高さの低い画面（スマホの横向き）: ヘッダとモーダルの枠を詰めて中身の場所を空ける */
 @media (max-height:500px){
   .top{padding-top:4px;padding-bottom:4px}
@@ -537,8 +537,6 @@ p,.hint,.notice,small,.mbtn small{text-wrap:pretty}
   .gd-foot .btns .btn{min-height:36px;font-size:14px}
   .tbl-scroll.fixed{max-height:calc(var(--app-h,100dvh) - 120px)}
 }
-/* 横スクロールする表は、固定の先頭列とほかの列を同じ不透明な面に載せる（モーダル内も） */
-.tbl-scroll{background:var(--face)}
 /* 高さの低い画面: メニュー上のまとめを詰めて、メニューのボタンを 1 画面目に入れる */
 @media (max-height:500px){
   .hero{gap:6px;padding:10px 14px}
@@ -547,12 +545,6 @@ p,.hint,.notice,small,.mbtn small{text-wrap:pretty}
   .demo-note{padding:8px 12px}
 }
 @media (pointer:coarse){.subrow .btn{min-height:36px}}
-.rec-main{padding-right:10px}
-.day-h{min-height:36px;align-items:center}
-.cal-key{vertical-align:-1px}
-.cal-key.has{vertical-align:1px}
-/* ヘッダの左右を本文の余白（16px）にそろえる */
-.top{padding-left:clamp(16px,3vw,32px);padding-right:clamp(16px,3vw,32px)}
 /* メニュー上のまとめは 3 つ横並び（ごく狭い画面だけ 2 列） */
 .hero .hs-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 .hero .hs-grid>.hs-stat:nth-child(3):last-child{grid-column:auto}
@@ -588,7 +580,6 @@ p,.hint,.notice,small,.mbtn small{text-wrap:pretty}
 .club-tbl .tbl tr.pick-row td{background:color-mix(in srgb,var(--s1) 14%,var(--face));color:var(--ink)}
 .club-tbl tr.clk{cursor:pointer}
 /* 他クラブ（1人あたり）: 点々の線。メンバー平均（破線）と線の模様で見分ける */
-:root{--cmp:#7c4dde}:root[data-theme="dark"]{--cmp:#b197fc}
 .cmp{--c:var(--cmp)}
 .chart .cmp .ln{stroke-dasharray:0 6;stroke-linecap:round;stroke-width:3.4}
 .chart .cmp .mk{fill:var(--cmp)}
@@ -598,292 +589,3 @@ p,.hint,.notice,small,.mbtn small{text-wrap:pretty}
 .cmp-pick{display:flex;align-items:center;gap:6px}
 .cmp-pick .key{display:inline-block;flex:none;width:18px;height:6px}
 .cmp-pick select{min-width:0}
-
-/* ===================================================================
-   ルルルン風（ピンク・シール）
-   形は今のまま直角。白い面にピンクの枠と、下にずらしたピンクの影でシールのように見せる。
-   小見出しはピンクのタグ、数字は丸い英字（Nunito）。地は淡いピンクにパステルのぼかしとキラ。
-   =================================================================== */
-:root{
-  --bg:#FDF1F4;
-  --ink:#3B2F35; --ink-2:#5E4E55; --muted:#7A6670;
-  --hair:rgba(59,47,53,.08); --hair-2:rgba(214,72,116,.32);
-  --glass-hi:#FFFFFF; --glass:#FFFFFF; --glass-lo:rgba(255,255,255,.72); --edge:#F6A8BE; --face:#FFFFFF;
-  --shadow:0 14px 30px -18px rgba(150,40,80,.4);
-  --you:#D23F69; --you-soft:rgba(238,94,134,.14); --you-text:#2C6E91;
-  --nav-bg:#FFFFFF; --nav-ink:#5E4E55; --nav-on:#D23F69; --nav-on-ink:var(--pk-on); --seg-on:#D23F69;
-  --pop-bg:rgba(255,255,255,.97);
-  --veil:rgba(253,241,244,.58);
-  --smoke:#FFFFFF; --smoke-edge:#F6A8BE; --smoke-shadow:0 5px 0 #F9C9D6;
-  --gd-bg:#FFFFFF; --gd-edge:#F6A8BE; --gd-line:#FBE0E8;
-  --gd-shadow:0 8px 0 #F9C9D6,0 40px 80px -34px rgba(150,40,80,.45); --gd-veil:rgba(80,30,50,.2);
-  --cell:#FFF7F9; --cell-pair:#FFE3EB; --cell-ink:#7A6670;
-  /* ピンク: 塗り・塗りに乗せる文字（--pk-on）・枠・影・淡い面。--pk-ink は白い面に置く文字の色 */
-  --pk-on:#FFFFFF;
-  --pk:#D23F69; --pk-deep:#A82E52; --pk-ink:#D23F69; --pk-line:#F6A8BE; --pk-shadow:#F9C9D6; --pk-soft:#FFE3EB; --pk-tint:#FFF7F9;
-  --veil-deco:
-    radial-gradient(circle at 6% 14%,rgba(255,182,201,.55),transparent 22%),
-    radial-gradient(circle at 96% 6%,rgba(255,243,168,.7),transparent 20%),
-    radial-gradient(circle at 98% 52%,rgba(190,227,248,.6),transparent 18%);
-  /* 炎のマーク（--fl1〜3 外・4〜5 中・6〜7 芯）と、背景の炎の色相のずらし */
-  --fl1:#F48FB1; --fl2:#EC407A; --fl3:#C2185B; --fl4:#F8BBD0; --fl5:#F06292; --fl6:#FFF7FA; --fl7:#FCD5E3;
-  --fire-hue:0deg;
-}
-:root[data-theme="dark"]{
-  --bg:#141014; --ink:#F6EEF1; --ink-2:#D6C6CD; --muted:#A8949D;
-  --hair:rgba(255,255,255,.08); --hair-2:rgba(255,143,176,.34);
-  --glass-hi:rgba(255,255,255,.08); --glass:rgba(255,255,255,.06); --glass-lo:rgba(255,255,255,.04); --edge:rgba(255,143,176,.4); --face:#1F181C;
-  --shadow:0 20px 40px -20px rgba(0,0,0,.8);
-  --you:#FF8FB0; --you-soft:rgba(255,143,176,.16); --you-text:#7DB4CF;
-  --nav-bg:#1F181C; --nav-ink:#E8DCE1; --nav-on:#D23F69; --nav-on-ink:#FFFFFF; --seg-on:#D23F69;
-  --pop-bg:rgba(31,24,28,.97);
-  --veil:rgba(20,16,20,.55);
-  --smoke:#1F181C; --smoke-edge:rgba(255,143,176,.38); --smoke-shadow:0 5px 0 rgba(238,94,134,.26);
-  --gd-bg:#1F181C; --gd-edge:rgba(255,143,176,.4); --gd-line:rgba(255,255,255,.08);
-  --gd-shadow:0 8px 0 rgba(238,94,134,.26),0 40px 80px -30px rgba(0,0,0,.85); --gd-veil:rgba(0,0,0,.4);
-  --cell:rgba(255,255,255,.04); --cell-pair:rgba(255,143,176,.14); --cell-ink:#A8949D;
-  --pk:#D23F69; --pk-deep:#8E2747; --pk-ink:#FF8FB0; --pk-line:rgba(255,143,176,.42); --pk-shadow:rgba(238,94,134,.26); --pk-soft:rgba(255,143,176,.16); --pk-tint:rgba(255,143,176,.06);
-  --veil-deco:radial-gradient(circle at 6% 14%,rgba(238,94,134,.16),transparent 24%);
-}
-/* ライトの色違い（太陽のボタンで ピンク → ブルー → イエロー → グリーン → ラベンダー → ダーク と巡る）。
-   形・影の付け方はピンクと同じで、色の変数だけを差し替える。明るいパステルの塗りにして、
-   イエローとグリーンは塗りが淡いので、塗りに乗せる文字（--pk-on）を白ではなく濃い同系色にしている。 */
-:root[data-theme="blue"]{
-  --bg:#EFF7FE;
-  --ink:#2E3846; --ink-2:#4E5B6C; --muted:#637183;
-  --hair:rgba(46,56,70,.08); --hair-2:rgba(74,159,230,.34);
-  --edge:#B3D9F8;
-  --shadow:0 14px 30px -18px rgba(74,159,230,.4);
-  --you:#2B7BC0; --you-soft:rgba(74,159,230,.14);
-  --nav-ink:#4E5B6C; --nav-on:#4A9FE6; --seg-on:#4A9FE6;
-  --veil:rgba(239,247,254,.58);
-  --smoke-edge:#B3D9F8; --smoke-shadow:0 5px 0 #D2E9FB;
-  --gd-edge:#B3D9F8; --gd-line:#E4F1FC;
-  --gd-shadow:0 8px 0 #D2E9FB,0 40px 80px -34px rgba(74,159,230,.45); --gd-veil:rgba(46,56,70,.2);
-  --cell:#F7FBFF; --cell-pair:#E2F1FD; --cell-ink:#637183;
-  --pk-on:#FFFFFF;
-  --pk:#4A9FE6; --pk-deep:#3487CF; --pk-ink:#2B7BC0; --pk-line:#B3D9F8; --pk-shadow:#D2E9FB; --pk-soft:#E2F1FD; --pk-tint:#F7FBFF;
-  --veil-deco:
-    radial-gradient(circle at 6% 14%,rgba(170,215,250,.6),transparent 22%),
-    radial-gradient(circle at 96% 6%,rgba(255,236,170,.65),transparent 20%),
-    radial-gradient(circle at 98% 52%,rgba(255,200,220,.5),transparent 18%);
-  --fl1:#A6D6FB; --fl2:#5DB2F2; --fl3:#2F86D6; --fl4:#CBE7FD; --fl5:#7CC2F6; --fl6:#F8FCFF; --fl7:#D9EDFD;
-  --fire-hue:-125deg;
-}
-:root[data-theme="yellow"]{
-  --bg:#FFFAE6;
-  --ink:#3F3628; --ink-2:#605442; --muted:#75684F;
-  --hair:rgba(63,54,40,.08); --hair-2:rgba(240,181,42,.34);
-  --edge:#F6DC8C;
-  --shadow:0 14px 30px -18px rgba(240,181,42,.4);
-  --you:#A0700A; --you-soft:rgba(240,181,42,.14);
-  --nav-ink:#605442; --nav-on:#FFCF4D; --seg-on:#FFCF4D;
-  --veil:rgba(255,250,230,.58);
-  --smoke-edge:#F6DC8C; --smoke-shadow:0 5px 0 #FCEBB4;
-  --gd-edge:#F6DC8C; --gd-line:#FDF0C9;
-  --gd-shadow:0 8px 0 #FCEBB4,0 40px 80px -34px rgba(240,181,42,.45); --gd-veil:rgba(63,54,40,.2);
-  --cell:#FFFCF0; --cell-pair:#FFF3C8; --cell-ink:#75684F;
-  --pk-on:#5E4410;
-  --pk:#FFCF4D; --pk-deep:#F0B52A; --pk-ink:#A0700A; --pk-line:#F6DC8C; --pk-shadow:#FCEBB4; --pk-soft:#FFF3C8; --pk-tint:#FFFCF0;
-  --veil-deco:
-    radial-gradient(circle at 6% 14%,rgba(255,226,130,.6),transparent 22%),
-    radial-gradient(circle at 96% 6%,rgba(255,200,215,.55),transparent 20%),
-    radial-gradient(circle at 98% 52%,rgba(190,227,248,.55),transparent 18%);
-  --fl1:#FFE07A; --fl2:#FFC633; --fl3:#F0A30A; --fl4:#FFEBA6; --fl5:#FFD24D; --fl6:#FFFDF5; --fl7:#FFF1C4;
-  --fire-hue:65deg;
-}
-:root[data-theme="green"]{
-  --bg:#EEFAF4;
-  --ink:#2C3A33; --ink-2:#4A5B52; --muted:#5E7067;
-  --hair:rgba(44,58,51,.08); --hair-2:rgba(79,195,149,.34);
-  --edge:#ADE5CD;
-  --shadow:0 14px 30px -18px rgba(79,195,149,.4);
-  --you:#23855F; --you-soft:rgba(79,195,149,.14);
-  --nav-ink:#4A5B52; --nav-on:#7DD8B4; --seg-on:#7DD8B4;
-  --veil:rgba(238,250,244,.58);
-  --smoke-edge:#ADE5CD; --smoke-shadow:0 5px 0 #CDF0E0;
-  --gd-edge:#ADE5CD; --gd-line:#E2F6EC;
-  --gd-shadow:0 8px 0 #CDF0E0,0 40px 80px -34px rgba(79,195,149,.45); --gd-veil:rgba(44,58,51,.2);
-  --cell:#F6FDF9; --cell-pair:#DDF5EA; --cell-ink:#5E7067;
-  --pk-on:#1E5E46;
-  --pk:#7DD8B4; --pk-deep:#4FC395; --pk-ink:#23855F; --pk-line:#ADE5CD; --pk-shadow:#CDF0E0; --pk-soft:#DDF5EA; --pk-tint:#F6FDF9;
-  --veil-deco:
-    radial-gradient(circle at 6% 14%,rgba(160,230,200,.6),transparent 22%),
-    radial-gradient(circle at 96% 6%,rgba(255,243,168,.65),transparent 20%),
-    radial-gradient(circle at 98% 52%,rgba(190,227,248,.55),transparent 18%);
-  --fl1:#A8E9CF; --fl2:#6FD6AC; --fl3:#33B07F; --fl4:#C9F2E1; --fl5:#8FE0BF; --fl6:#F7FEFB; --fl7:#D6F5E8;
-  --fire-hue:175deg;
-}
-:root[data-theme="lavender"]{
-  --bg:#F6F2FD;
-  --ink:#372F42; --ink-2:#584E66; --muted:#6D647C;
-  --hair:rgba(55,47,66,.08); --hair-2:rgba(154,120,227,.34);
-  --edge:#D2C1F3;
-  --shadow:0 14px 30px -18px rgba(154,120,227,.4);
-  --you:#7B57C9; --you-soft:rgba(154,120,227,.14);
-  --nav-ink:#584E66; --nav-on:#9A78E3; --seg-on:#9A78E3;
-  --veil:rgba(246,242,253,.58);
-  --smoke-edge:#D2C1F3; --smoke-shadow:0 5px 0 #E4D9F8;
-  --gd-edge:#D2C1F3; --gd-line:#EFE8FC;
-  --gd-shadow:0 8px 0 #E4D9F8,0 40px 80px -34px rgba(154,120,227,.45); --gd-veil:rgba(55,47,66,.2);
-  --cell:#FBF9FF; --cell-pair:#EEE6FC; --cell-ink:#6D647C;
-  --pk-on:#FFFFFF;
-  --pk:#9A78E3; --pk-deep:#7E5BCF; --pk-ink:#7B57C9; --pk-line:#D2C1F3; --pk-shadow:#E4D9F8; --pk-soft:#EEE6FC; --pk-tint:#FBF9FF;
-  --veil-deco:
-    radial-gradient(circle at 6% 14%,rgba(210,190,248,.6),transparent 22%),
-    radial-gradient(circle at 96% 6%,rgba(255,205,225,.6),transparent 20%),
-    radial-gradient(circle at 98% 52%,rgba(190,227,248,.55),transparent 18%);
-  --fl1:#CDB6F5; --fl2:#A587EA; --fl3:#7651D0; --fl4:#E0D2FA; --fl5:#B79EEE; --fl6:#FCFAFF; --fl7:#EADFFB;
-  --fire-hue:-70deg;
-}
-.veil{background:var(--veil-deco),var(--veil)}
-/* キラ: メニューの大きなカードと記録ボタンの角に 1 つずつ */
-:root{--kira:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 0C11 7 13 9 20 10C13 11 11 13 10 20C9 13 7 11 0 10C7 9 9 7 10 0Z' fill='%23FFC94D'/%3E%3C/svg%3E")}
-.panel.hero::after,.mbtn.hot::after{content:"";position:absolute;top:-10px;right:64px;width:20px;height:20px;background:var(--kira) center/contain no-repeat;pointer-events:none}
-.mbtn.hot::after{right:28px;width:16px;height:16px;top:-8px}
-
-/* 小見出し: ピンクのタグ */
-.eyebrow{display:inline-block;justify-self:start;align-self:start;width:max-content;max-width:100%;background:var(--pk);color:var(--pk-on);
-  font-family:var(--f-num);font-weight:800;font-size:11px;letter-spacing:.12em;line-height:1.5;padding:2px 9px}
-.list-h{align-items:center}
-.list-h .rt{font-weight:800;color:var(--ink-2)}
-/* pane の見出し: タグを題の箱に乗せる */
-.pane-h{align-items:flex-end}
-.ph-t{display:inline-flex;flex-direction:column;align-items:flex-start;min-width:0}
-.ph-t .eyebrow{position:relative;z-index:1;margin-left:12px}
-.pane-h .ph-t b{margin-top:-8px;padding:11px 16px 7px;background:var(--face);border:1.5px solid var(--pk-line);font-size:20px;font-weight:900;line-height:1.3}
-.gd-head .eyebrow{margin-bottom:4px}
-.back{font-weight:800;color:var(--pk-ink)}
-
-/* ナビ・ヘッダのボタン */
-.navpill{border:1.5px solid var(--pk-line);box-shadow:0 3px 0 var(--pk-shadow)}
-.nbtn{font-family:var(--f-ui);font-weight:700}
-.nbtn:hover:not([aria-current="page"]){background:var(--pk-soft)}
-.nbtn[aria-current="page"]:hover{background:var(--nav-on)}
-.hbtn,.theme-toggle{border:1.5px solid var(--pk-line);background:var(--face);color:var(--pk-ink);box-shadow:0 3px 0 var(--pk-shadow)}
-@media (hover:hover){.hbtn:hover,.theme-toggle:hover{border-color:var(--pk);background:var(--face)}}
-
-/* 面（パネル・行・ダイアログ）: 白い面 + ピンクの枠 + ずらした影 */
-.panel,.rec,.ent,.mbtn{border:1.5px solid var(--smoke-edge);background:var(--smoke);box-shadow:var(--smoke-shadow);-webkit-backdrop-filter:none;backdrop-filter:none}
-.panel{box-shadow:0 6px 0 var(--pk-shadow)}
-/* 波のフリル（メニューの大きなカードとグラフのパネルの上端） */
-.panel.hero,.panel:has(.chart){position:relative;padding-top:20px}
-.panel.hero::before,.panel:has(.chart)::before{content:"";position:absolute;left:0;right:0;top:0;height:10px;pointer-events:none;
-  background:radial-gradient(circle at 10px 0,var(--pk-soft) 8px,transparent 9px) 0 0/20px 10px repeat-x}
-dialog.glass-dlg{-webkit-backdrop-filter:none;backdrop-filter:none}
-.ent{border-left-width:3px}
-.ent.on{border-left-color:var(--pk)}
-.tip{border:1.5px solid var(--pk-line)}
-.notice{border:1.5px solid var(--pk-line);background:var(--face)}
-.notice.warn{border-width:0 0 0 3px}
-.notice.ok{border-width:0 0 0 3px;border-left-color:var(--pk)}
-.toast{border:1.5px solid var(--pk-line);border-left:3px solid var(--pk);background:var(--pop-bg);box-shadow:0 4px 0 var(--pk-shadow),var(--shadow)}
-.toast.err{border-left-color:var(--cpu)}
-
-/* メニューの大きな行ボタン */
-.mbtn{font-family:var(--f-ui);font-weight:900;box-shadow:0 6px 0 var(--pk-shadow)}
-.mbtn .rt{font-family:var(--f-num);font-weight:900;color:var(--pk-ink)}
-.mbtn:active:not(:disabled){transform:translateY(3px);box-shadow:0 3px 0 var(--pk-shadow)}
-@media (hover:hover){.mbtn:hover:not(:disabled){border-color:var(--pk);background:var(--smoke)}}
-.mbtn.hot{background:var(--pk);border-color:var(--pk);color:var(--pk-on);box-shadow:0 6px 0 var(--pk-deep)}
-.mbtn.hot small{color:var(--pk-on)}
-.mbtn.hot .rt{background:#fff;color:var(--pk-ink);padding:4px 11px;font-family:var(--f-ui);font-size:15px}
-.mbtn.hot:active:not(:disabled){box-shadow:0 3px 0 var(--pk-deep)}
-@media (hover:hover){.mbtn.hot:hover:not(:disabled){background:var(--pk);border-color:var(--pk);filter:brightness(1.05)}}
-
-/* メニューの上のカード */
-.season-tag{font-family:var(--f-num);font-weight:900;color:var(--pk-ink);letter-spacing:0}
-.hero-sub b{font-family:var(--f-num);font-weight:900}
-
-/* ボタン */
-.btn{border:1.5px solid var(--pk-line);background:var(--face);box-shadow:0 3px 0 var(--pk-shadow)}
-.btn:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 var(--pk-shadow)}
-.btn.primary{background:var(--pk);border-color:var(--pk);color:var(--pk-on);box-shadow:0 3px 0 var(--pk-deep)}
-.btn.primary:active:not(:disabled){box-shadow:0 1px 0 var(--pk-deep)}
-.btn.ghost{background:transparent;box-shadow:none}
-.btn.danger{border-color:var(--cpu);box-shadow:0 3px 0 #B8430F}
-.btn:disabled{box-shadow:none}
-.lnk{color:var(--pk-ink);text-decoration-color:var(--pk-line)}
-.lnk:hover{color:var(--pk)}
-
-/* セグメント・入力 */
-.seg{background:var(--face);border:1.5px solid var(--pk-line)}
-.seg button{font-family:var(--f-ui)}
-.seg button[aria-pressed="true"]{background:var(--pk);color:var(--pk-on);box-shadow:none}
-.tin{border:1.5px solid var(--pk-line);background:var(--face)}
-.tin:focus,button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline-color:var(--pk)}
-select.tin{background-image:linear-gradient(45deg,transparent 50%,var(--pk-ink) 50%),linear-gradient(135deg,var(--pk-ink) 50%,transparent 50%)}
-.dnav{border:1.5px solid var(--pk-line);background:var(--face);color:var(--pk-ink)}
-.lbl{color:var(--pk-ink)}
-
-/* 数字のタイル */
-.hs-stat{border:1px solid var(--pk-soft);background:var(--pk-tint)}
-.panel .hs-stat,.hs-grid .hs-stat{background:var(--pk-tint)}
-.statlbl{color:var(--pk-ink)}
-.hs-val{font-weight:900;letter-spacing:0}
-
-/* 記録: 順位ボタン・部 */
-.rk{border:1.5px solid var(--pk-line);background:var(--face);box-shadow:0 2px 0 var(--pk-shadow);font-weight:900}
-.rk[aria-pressed="true"]{background:var(--pk);border-color:var(--pk);color:var(--pk-on);box-shadow:none;transform:translateY(2px)}
-.rk.r1[aria-pressed="true"]{border-color:transparent}
-.rk.r6[aria-pressed="true"]{border-color:transparent}
-@media (hover:hover){.rk:hover:not(:disabled):not([aria-pressed="true"]){border-color:var(--pk)}}
-.partsel button{border-color:var(--pk-line)}
-.partsel button[aria-pressed="true"]{background:var(--pk);border-color:var(--pk);color:var(--pk-on)}
-.stat-tg{border-color:var(--pk-line)}
-.rkb.r2,.rkb.r3,.rkb.r4{background:var(--pk-soft);border-color:var(--pk-line)}
-
-/* チップ・表・グラフ */
-.chip{border:1.5px solid var(--pk-soft);background:var(--face)}
-.chip.on{border-color:var(--c);background:var(--face)}
-.chip.legend-avg{border-color:var(--pk-line)}
-.tbl th{border-bottom:1.5px solid var(--pk-soft)}
-.tbl-scroll.fixed{background:var(--face)}
-.chart .grid{stroke:var(--pk-soft)}
-.chart .grid.zero{stroke:var(--pk-line)}
-.dist-bar{background:var(--pk-soft)}
-.dist-bar i{background:var(--pk)}
-.cal-d{border-color:var(--pk-soft);background:var(--face)}
-.cal-d.on{background:var(--pk);border-color:var(--pk);color:var(--pk-on)}
-.cal-d.has::after{background:var(--you-text)}
-.cal-key.on{background:var(--pk)}
-.cal-key.has{background:var(--you-text)}
-.gem{background:linear-gradient(135deg,#fff,var(--pk) 65%)}
-.x{border:1.5px solid var(--pk-line)}
-.x::before,.x::after{background:var(--pk-ink)}
-.empty{border-color:var(--pk-line);background:var(--pk-tint)}
-.club-pick select{border:1.5px solid var(--pk-line);background-color:var(--face)}
-.cmp-pick select{border-color:var(--pk-line)}
-.mtag{display:inline-block;font-family:var(--f-num);font-size:10px;font-weight:800;letter-spacing:.1em;line-height:1.5;padding:1px 7px;border:1.5px solid var(--pk-line);color:var(--pk-ink);background:var(--face)}
-
-/* ===== インフォメーションマーク（小さな説明はすべてここから開くモーダルへ） ===== */
-.info-btn{position:relative;flex:none;display:inline-grid;place-items:center;width:22px;height:22px;padding:0;border:0;background:none;color:var(--pk-ink);cursor:pointer;vertical-align:middle;transition:transform .12s,color .15s}
-.info-btn svg{width:18px;height:18px}
-.info-btn::after{content:"";position:absolute;inset:-9px}
-.info-btn:active{transform:scale(.9)}
-@media (hover:hover){.info-btn:hover{color:var(--pk)}}
-.pt{display:inline-flex;align-items:center;gap:4px;min-width:0}
-.pane-h .acts{align-items:center}
-.lbl-row{display:flex;align-items:center;gap:4px;margin:12px 0 5px}
-.lbl-row .lbl{margin:0}
-.gd-scroll h3 .info-btn{margin-left:-2px}
-.gd-head .acts .info-btn{margin-left:-3px}
-.info{display:grid;gap:12px}
-.cmp-pick:has(select:disabled) .key,.cmp-pick:not(:has(select option:checked:not([value=""]))) .key{opacity:.35}
-.info p{margin:0;font-size:14px;line-height:1.8;color:var(--ink)}
-.info-dl{display:grid;gap:0;margin:0;border-top:1.5px solid var(--pk-soft)}
-.info-dl>div{display:grid;grid-template-columns:minmax(5.5em,auto) minmax(0,1fr);gap:4px 14px;padding:10px 0;border-bottom:1px solid var(--pk-soft)}
-.info-dl dt{font-size:13px;font-weight:900;color:var(--pk-ink);line-height:1.7}
-.info-dl dd{margin:0;font-size:14px;line-height:1.7;color:var(--ink)}
-@media (max-width:380px){.info-dl>div{grid-template-columns:1fr}}
-.panel-h .pt{flex:0 0 auto}
-.info>.info-dl:first-child{border-top:0}
-/* 狭い画面では、比べるクラブのプルダウンを見出しの下の行に全幅で置く */
-@media (max-width:440px){
-  .panel-h.cmp-h{flex-wrap:wrap}
-  .cmp-h .cmp-pick{flex:1 1 100%;max-width:none;margin-left:0}
-}
-@media (max-width:360px){
-  .club .panel-h{flex-wrap:wrap}
-  .club .club-pick{flex:1 1 100%;max-width:none;margin-left:0}
-}

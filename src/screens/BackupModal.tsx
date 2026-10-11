@@ -13,13 +13,26 @@ function fmtAt(ms: number): string {
   return `${d.getMonth() + 1}/${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
+/** 読み込んだファイルが使えなかったときの説明。 */
+function readErrorMessage(error: unknown): string {
+  if (error instanceof SyntaxError) return 'JSON として読めませんでした。';
+  if (error instanceof Error) return error.message;
+  return String(error);
+}
+
+/** 保存領域の保護（navigator.storage.persist）の状態の表記。 */
+function persistedLabel(persisted: boolean | null): string {
+  if (persisted == null) return 'このブラウザでは確認できません';
+  return persisted ? '有効' : '未許可';
+}
+
 /**
  * バックアップ。
  * - 自動（端末内の履歴）: データを変えるたびに自動で残る。ここから好きな時点に戻せる
  * - 自動（ファイル）: PC の Chrome / Edge なら、選んだファイルへ毎回自動で書き出す
  * - 手動: JSON の書き出し・読み込み（機種変更など）
  */
-export function BackupModal(props: {
+export function BackupModal(props: Readonly<{
   data: AppData;
   file: FileStatus;
   persisted: boolean | null;
@@ -28,7 +41,7 @@ export function BackupModal(props: {
   onStopFile: () => Promise<void>;
   onImport: (d: AppData, label: string) => Promise<void>;
   onClose: () => void;
-}): JSX.Element {
+}>): JSX.Element {
   const { data, file } = props;
   const fileRef = useRef<HTMLInputElement>(null);
   const [history, setHistory] = useState<BackupEntry[] | null>(null);
@@ -61,8 +74,8 @@ export function BackupModal(props: {
     setErr(null);
     try {
       setPending({ data: parseBackup(JSON.parse(await f.text())), label: f.name });
-    } catch (x) {
-      setErr(x instanceof SyntaxError ? 'JSON として読めませんでした。' : x instanceof Error ? x.message : String(x));
+    } catch (error_) {
+      setErr(readErrorMessage(error_));
     }
   }
 
@@ -73,6 +86,30 @@ export function BackupModal(props: {
     } finally {
       setBusy(false);
     }
+  }
+
+  function historyList(): JSX.Element {
+    if (history == null) return <p className="hint">読み込み中…</p>;
+    if (history.length === 0) return <p className="hint">まだありません</p>;
+    return (
+      <ul className="bk-list">
+        {history.map((b, i) => (
+          <li key={b.id}>
+            <span className="num">{fmtAt(b.at)}</span>
+            <span className="muted">
+              メンバー {b.members} · 記録 {b.records}
+            </span>
+            {i === 0 ? (
+              <span className="mtag">最新</span>
+            ) : (
+              <button type="button" className="btn sm ghost" onClick={() => setPending({ data: b.data, label: `${fmtAt(b.at)} の自動バックアップ` })}>
+                この時点に戻す
+              </button>
+            )}
+          </li>
+        ))}
+      </ul>
+    );
   }
 
   return (
@@ -94,29 +131,7 @@ export function BackupModal(props: {
           ON
         </span>
       </h3>
-      {history == null ? (
-        <p className="hint">読み込み中…</p>
-      ) : history.length === 0 ? (
-        <p className="hint">まだありません</p>
-      ) : (
-        <ul className="bk-list">
-          {history.map((b, i) => (
-            <li key={b.id}>
-              <span className="num">{fmtAt(b.at)}</span>
-              <span className="muted">
-                メンバー {b.members} · 記録 {b.records}
-              </span>
-              {i === 0 ? (
-                <span className="mtag">最新</span>
-              ) : (
-                <button type="button" className="btn sm ghost" onClick={() => setPending({ data: b.data, label: `${fmtAt(b.at)} の自動バックアップ` })}>
-                  この時点に戻す
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+      {historyList()}
 
       <h3>
         <i className="gem" />
@@ -214,7 +229,7 @@ export function BackupModal(props: {
       )}
       <p className="hint">
         保存領域の保護:{' '}
-        {props.persisted == null ? 'このブラウザでは確認できません' : props.persisted ? '有効' : '未許可'}
+        {persistedLabel(props.persisted)}
       </p>
 
       {pending && (

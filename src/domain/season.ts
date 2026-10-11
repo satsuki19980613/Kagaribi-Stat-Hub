@@ -7,7 +7,7 @@
  * （SeasonOverride）。直した期間はその前後のシーズンと重ならないことを検証する。
  */
 
-import { daysInMonth, eachDay, isIsoDate, isoOf, parseIso, weekdayOf } from './date';
+import { compareIso, daysInMonth, eachDay, isIsoDate, isoOf, parseIso, weekdayOf } from './date';
 import type { SeasonOverride } from './model';
 
 export const FIRST_SEASON = 31;
@@ -124,7 +124,7 @@ export function validateSeasonEdit(edit: SeasonOverride, overrides: readonly Sea
 
 /** 期間の外に出た休催／追加開催の指定を落とす。既定と同じなら null（＝修正を消す）。 */
 export function normalizeOverride(edit: SeasonOverride): SeasonOverride | null {
-  const toggled = [...new Set(edit.toggled)].filter((d) => d >= edit.start && d <= edit.end).sort();
+  const toggled = [...new Set(edit.toggled)].filter((d) => d >= edit.start && d <= edit.end).sort(compareIso);
   const base = defaultSeasonRange(edit.no);
   if (edit.start === base.start && edit.end === base.end && toggled.length === 0) return null;
   return { no: edit.no, start: edit.start, end: edit.end, toggled };

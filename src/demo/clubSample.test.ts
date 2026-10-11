@@ -9,7 +9,7 @@ describe('デモのクラブ順位', () => {
     expect(() => parseClubData(JSON.parse(JSON.stringify(d)))).not.toThrow();
     let acc = emptyClubData();
     for (const r of d.rounds) {
-      expect(r.clubs.length).toBe(30);
+      expect(r.clubs).toHaveLength(30);
       const { errors, warnings } = checkRound(acc, r);
       expect(errors).toEqual([]);
       // 圏外から戻ったクラブは前節のデータに居ないので、累計の突き合わせ・順位の警告は出ない。

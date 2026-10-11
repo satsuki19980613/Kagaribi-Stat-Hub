@@ -147,7 +147,7 @@ describe('データの扱い', () => {
   it('同じ節は置き換え、節の順に並べる', () => {
     expect(d.rounds.map((r) => r.round)).toEqual([1, 2]);
     const again = upsertRound(d, { ...r1, clubs: [{ rank: 1, prev: null, name: 'A', total: 41, gain: 41 }] }, 't3');
-    expect(again.rounds.length).toBe(2);
+    expect(again.rounds).toHaveLength(2);
     expect(again.rounds[0]?.clubs[0]?.total).toBe(41);
     expect(again.updatedAt).toBe('t3');
   });

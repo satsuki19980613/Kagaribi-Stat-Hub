@@ -15,8 +15,14 @@ export interface MemberSave {
   stats: { wins?: number; vpip?: number; hands?: number } | null;
 }
 
+/** スタッツ履歴の並び（日付の新しい順、同じ日なら後から入れた順）。 */
+function newestFirst(a: StatSnapshot, b: StatSnapshot): number {
+  if (a.date === b.date) return b.createdAt - a.createdAt;
+  return b.date < a.date ? -1 : 1;
+}
+
 /** メンバー情報登録。人数に上限はない（代走も登録する）。外した人はアーカイブに残す。 */
-export function MembersScreen(props: {
+export function MembersScreen(props: Readonly<{
   data: AppData;
   today: string;
   onSave: (s: MemberSave) => Promise<string | null>;
@@ -24,7 +30,7 @@ export function MembersScreen(props: {
   onPurge: (m: Member) => void;
   onDeleteSnapshot: (s: StatSnapshot) => void;
   onBack: () => void;
-}): JSX.Element {
+}>): JSX.Element {
   const { data } = props;
   const [edit, setEdit] = useState<Member | 'new' | null>(null);
   const [showArchived, setShowArchived] = useState(false);
@@ -116,7 +122,7 @@ export function MembersScreen(props: {
   );
 }
 
-function MemberModal(props: {
+function MemberModal(props: Readonly<{
   member: Member | null;
   data: AppData;
   today: string;
@@ -125,7 +131,7 @@ function MemberModal(props: {
   onPurge: (m: Member) => void;
   onDeleteSnapshot: (s: StatSnapshot) => void;
   onClose: () => void;
-}): JSX.Element {
+}>): JSX.Element {
   const { member, data } = props;
   const count = member ? matchCountOf(member, data.records) : 0;
   const [name, setName] = useState(member?.name ?? '');
@@ -138,7 +144,7 @@ function MemberModal(props: {
   const [confirm, setConfirm] = useState<'archive' | 'purge' | null>(null);
 
   const snaps = member
-    ? data.snapshots.filter((s) => s.memberId === member.id).sort((a, b) => (b.date === a.date ? b.createdAt - a.createdAt : b.date < a.date ? -1 : 1))
+    ? data.snapshots.filter((s) => s.memberId === member.id).sort(newestFirst)
     : [];
   const last = member ? latestSnapshot(data.snapshots, member.id) : undefined;
   const nRecords = member ? data.records.filter((r) => r.memberId === member.id).length : 0;
@@ -291,8 +297,7 @@ function MemberModal(props: {
       {snaps.length > 0 && (
         <>
           <h3>
-            <i className="gem" />
-            スタッツの履歴
+            <i className="gem" />スタッツの履歴
           </h3>
           <div className="tbl-scroll">
           <table className="tbl stats">
@@ -333,8 +338,7 @@ function MemberModal(props: {
       {member?.archived && (
         <>
           <h3>
-            <i className="gem c" />
-            完全に削除
+            <i className="gem c" />完全に削除
           </h3>
           <p className="hint">このメンバーの記録 {nRecords} 件とスタッツもすべて消えます。元に戻せません。</p>
           <button type="button" className="btn sm danger" onClick={() => setConfirm('purge')}>

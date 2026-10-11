@@ -6,8 +6,14 @@ import { fmtPt } from '../domain/points';
 import { isMatchDay, matchDays, seasonOf, seasonRange } from '../domain/season';
 import { recordsInRange, summarize } from '../domain/stats';
 
+/** 「記録」ボタンの小さな説明（今日がシーズン中か・開催日か）。 */
+function recordHint(inSeason: boolean, matchToday: boolean): string {
+  if (!inSeason) return 'シーズン期間外の日です';
+  return matchToday ? '今日は開催日です。順位を入力します' : '今日は開催日ではありません';
+}
+
 /** メニュー（ルート）。記録・メンバー情報登録・スタッツビューの 3 つと、補助の操作。 */
-export function Menu(props: {
+export function Menu(props: Readonly<{
   fileStatus: FileStatus;
   onResumeFile: () => void;
   demo: boolean;
@@ -21,7 +27,7 @@ export function Menu(props: {
   onHistory: () => void;
   onSeasons: () => void;
   onBackup: () => void;
-}): JSX.Element {
+}>): JSX.Element {
   const { data, today, season } = props;
   const range = seasonRange(season, data.seasons);
   const days = matchDays(season, data.seasons);
@@ -110,15 +116,13 @@ export function Menu(props: {
       </div>
       <button type="button" className="mbtn hot" onClick={props.onRecord}>
         <span>
-          記録
-          <small>{!inSeason ? 'シーズン期間外の日です' : matchToday ? '今日は開催日です。順位を入力します' : '今日は開催日ではありません'}</small>
+          記録<small>{recordHint(inSeason, matchToday)}</small>
         </span>
         <span className="rt">{todayCount > 0 ? `今日 ${todayCount}人` : 'RECORD'}</span>
       </button>
       <button type="button" className="mbtn" onClick={props.onMembers}>
         <span>
-          メンバー情報登録
-          <small>プレイヤー名・参加回数・基本スタッツ</small>
+          メンバー情報登録<small>プレイヤー名・参加回数・基本スタッツ</small>
         </span>
         <span className="rt">
           {active}人
@@ -126,8 +130,7 @@ export function Menu(props: {
       </button>
       <button type="button" className="mbtn" onClick={props.onStats}>
         <span>
-          スタッツビュー
-          <small>得点推移・加点率・1位率・生存ターン数</small>
+          スタッツビュー<small>得点推移・加点率・1位率・生存ターン数</small>
         </span>
         <span className="rt">STATS</span>
       </button>

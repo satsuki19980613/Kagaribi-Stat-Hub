@@ -61,8 +61,8 @@ export function hashData(data: AppData): string {
     [...data.seasons].sort((a, b) => a.no - b.no),
   ]);
   let h = 0x811c9dc5;
-  for (let i = 0; i < s.length; i += 1) {
-    h ^= s.charCodeAt(i);
+  for (const ch of s) {
+    h ^= ch.codePointAt(0)!;
     h = Math.imul(h, 0x01000193);
   }
   return (h >>> 0).toString(16).padStart(8, '0');
