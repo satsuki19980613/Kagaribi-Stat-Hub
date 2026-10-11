@@ -48,7 +48,7 @@ export function Dots(): JSX.Element {
 }
 
 /** ← BACK（pane 左上の戻る）。 */
-export function Back(props: { label?: string; onClick: () => void }): JSX.Element {
+export function Back(props: Readonly<{ label?: string; onClick: () => void }>): JSX.Element {
   return (
     <button type="button" className="back" onClick={props.onClick}>
       ← {props.label ?? 'BACK'}
@@ -57,7 +57,7 @@ export function Back(props: { label?: string; onClick: () => void }): JSX.Elemen
 }
 
 /** pane の見出し（eyebrow のタグを和文タイトルの箱に乗せる + 右端の操作）。 */
-export function PaneHead(props: { eyebrow: string; title: string; children?: ReactNode }): JSX.Element {
+export function PaneHead(props: Readonly<{ eyebrow: string; title: string; children?: ReactNode }>): JSX.Element {
   return (
     <div className="pane-h">
       <span className="ph-t">
@@ -72,8 +72,10 @@ export function PaneHead(props: { eyebrow: string; title: string; children?: Rea
 /**
  * ガラスのモーダル（`<dialog>` を showModal で最前面へ）。開いている間だけマウントする前提。
  * Esc はブラウザの cancel（最前面の dialog だけに届く）で、端末の戻るは backLayers で閉じる。
+ * 背景（::backdrop）のタップでも閉じる。これはマウス・タッチ向けの近道で、キーボードでは
+ * Esc と × ボタンが同じ役目を持つ。
  */
-export function Modal(props: {
+export function Modal(props: Readonly<{
   eyebrow: string;
   title: string;
   onClose: () => void;
@@ -82,26 +84,34 @@ export function Modal(props: {
   headActions?: ReactNode;
   foot?: ReactNode;
   children: ReactNode;
-}): JSX.Element {
+}>): JSX.Element {
   const ref = useRef<HTMLDialogElement>(null);
+  const latestClose = useRef(props.onClose);
+  latestClose.current = props.onClose;
   useBackLayer(props.onClose);
 
   useEffect(() => {
     const d = ref.current;
-    if (d && !d.open) d.showModal();
+    if (!d) return undefined;
+    if (!d.open) d.showModal();
+    // 背景のタップ（クリックの的が dialog 自身 = 中身の .dlg の外側）で閉じる。
+    const onBackdrop = (e: MouseEvent): void => {
+      if (e.target === d) latestClose.current();
+    };
+    d.addEventListener('click', onBackdrop);
+    return () => d.removeEventListener('click', onBackdrop);
   }, []);
+
+  const sizeClass = props.size ? ` ${props.size}` : '';
 
   return (
     <dialog
       ref={ref}
-      className={`glass-dlg${props.size ? ` ${props.size}` : ''}`}
+      className={`glass-dlg${sizeClass}`}
       aria-label={props.title}
       onCancel={(e) => {
         e.preventDefault();
         props.onClose();
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) props.onClose();
       }}
     >
       <div className="dlg">
@@ -119,7 +129,7 @@ export function Modal(props: {
 }
 
 /** 確認ダイアログ（削除など）。 */
-export function ConfirmDialog(props: {
+export function ConfirmDialog(props: Readonly<{
   eyebrow: string;
   title: string;
   body?: string;
@@ -127,7 +137,7 @@ export function ConfirmDialog(props: {
   danger?: boolean;
   onOk: () => void;
   onClose: () => void;
-}): JSX.Element {
+}>): JSX.Element {
   return (
     <Modal
       eyebrow={props.eyebrow}
@@ -161,7 +171,7 @@ export function ConfirmDialog(props: {
  * インフォメーションマーク。画面に小さな説明文を並べる代わりに、押すと説明のモーダルを開く。
  * 中身は短い段落・用語と意味の組（InfoList）で、読みやすく書く。
  */
-export function InfoButton(props: { title: string; children: ReactNode }): JSX.Element {
+export function InfoButton(props: Readonly<{ title: string; children: ReactNode }>): JSX.Element {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -189,12 +199,12 @@ export function InfoButton(props: { title: string; children: ReactNode }): JSX.E
   );
 }
 
-/** 説明モーダルの中の「用語 — 意味」の並び。 */
-export function InfoList(props: { items: [ReactNode, ReactNode][] }): JSX.Element {
+/** 説明モーダルの中の「用語 — 意味」の並び。用語は 1 つのリストの中で重ならない（キーに使う）。 */
+export function InfoList(props: Readonly<{ items: readonly (readonly [string, ReactNode])[] }>): JSX.Element {
   return (
     <dl className="info-dl">
-      {props.items.map(([k, v], i) => (
-        <div key={i}>
+      {props.items.map(([k, v]) => (
+        <div key={k}>
           <dt>{k}</dt>
           <dd>{v}</dd>
         </div>

@@ -13,16 +13,19 @@ import {
   validateSeasonEdit,
 } from '../domain/season';
 
+/** カレンダーの曜日の見出し（日曜はじまり。weekdayOf の 0〜6 と同じ並び）。 */
+const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'] as const;
+
 /**
  * シーズン設定。既定は暦月で自動判定し、急な短縮・延長・休催があったときだけここで直す。
  */
-export function SeasonsScreen(props: {
+export function SeasonsScreen(props: Readonly<{
   data: AppData;
   seasons: number[];
   today: string;
   onSave: (no: number, o: SeasonOverride | null) => void;
   onBack: () => void;
-}): JSX.Element {
+}>): JSX.Element {
   const { data } = props;
   const [edit, setEdit] = useState<number | null>(null);
   // 次のシーズンも先に直せるよう 1 つ足して並べる。
@@ -91,7 +94,7 @@ function months(start: string, end: string): { y: number; m: number }[] {
   return out;
 }
 
-function SeasonModal(props: { no: number; data: AppData; onSave: (o: SeasonOverride | null) => void; onClose: () => void }): JSX.Element {
+function SeasonModal(props: Readonly<{ no: number; data: AppData; onSave: (o: SeasonOverride | null) => void; onClose: () => void }>): JSX.Element {
   const { no, data } = props;
   const cur = seasonRange(no, data.seasons);
   const [start, setStart] = useState(cur.start);
@@ -180,8 +183,7 @@ function SeasonModal(props: { no: number; data: AppData; onSave: (o: SeasonOverr
       )}
 
       <h3>
-        <i className="gem" />
-        開催日（タップで休催／追加開催）
+        <i className="gem" />開催日（タップで休催／追加開催）
         <span className="muted num" style={{ marginLeft: 'auto', fontWeight: 600 }}>
           {days.length} 日
         </span>
@@ -190,7 +192,7 @@ function SeasonModal(props: { no: number; data: AppData; onSave: (o: SeasonOverr
         months(start, end).map(({ y, m }) => {
           const first = isoOf(y, m, 1);
           const lead = weekdayOf(first);
-          const cells: (string | null)[] = [...Array<null>(lead).fill(null)];
+          const cells: string[] = [];
           for (let d = 1; d <= daysInMonth(y, m); d += 1) cells.push(isoOf(y, m, d));
           return (
             <div key={`${y}-${m}`} className="cal">
@@ -198,13 +200,16 @@ function SeasonModal(props: { no: number; data: AppData; onSave: (o: SeasonOverr
                 {y}/{m}
               </div>
               <div className="cal-g">
-                {['日', '月', '火', '水', '木', '金', '土'].map((w) => (
+                {WEEKDAYS.map((w) => (
                   <span key={w} className="cal-w">
                     {w}
                   </span>
                 ))}
-                {cells.map((d, i) => {
-                  if (!d) return <span key={`e${i}`} />;
+                {/* 1 日の曜日までの空きマス（キーはその列の曜日）。 */}
+                {WEEKDAYS.slice(0, lead).map((w) => (
+                  <span key={`blank-${w}`} />
+                ))}
+                {cells.map((d) => {
                   const inRange = d >= start && d <= end;
                   const on = inRange && isDefaultMatchDay(d) !== toggled.includes(d);
                   const changed = inRange && toggled.includes(d);

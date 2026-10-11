@@ -54,6 +54,12 @@ function errText(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
 }
 
+/** 上のタブで強調するもの（スタックに入っている画面のうち、記録 → メンバー → スタッツの順に最初のもの）。 */
+const TAB_ORDER: readonly Tab[] = ['record', 'members', 'stats'];
+function currentTab(stack: readonly Screen[]): Tab | null {
+  return TAB_ORDER.find((t) => stack.includes(t)) ?? null;
+}
+
 export function App(): JSX.Element {
   const [data, setData] = useState<AppData>(EMPTY);
   const [loaded, setLoaded] = useState(false);
@@ -394,7 +400,7 @@ export function App(): JSX.Element {
     }
   }
 
-  const tab: Tab | null = stack.includes('record') ? 'record' : stack.includes('members') ? 'members' : stack.includes('stats') ? 'stats' : null;
+  const tab = currentTab(stack);
   const dirty = entryDirty();
 
   return (

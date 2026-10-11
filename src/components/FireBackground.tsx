@@ -59,6 +59,11 @@ function setupGl(gl: WebGLRenderingContext): Gpu | null {
   return { gl, uRes: gl.getUniformLocation(prog, 'uRes'), uTime: gl.getUniformLocation(prog, 'uTime') };
 }
 
+/** [0, 1) の乱数（見た目の揺らぎ用。開始時に 1 回だけ使う）。 */
+function random01(): number {
+  return crypto.getRandomValues(new Uint32Array(1))[0]! / 2 ** 32;
+}
+
 export function FireBackground(): JSX.Element {
   const host = useRef<HTMLDivElement>(null);
 
@@ -84,7 +89,7 @@ export function FireBackground(): JSX.Element {
     let lost = false;
     let last = performance.now();
     // 長時間でノイズ座標が大きくなり精度が落ちないよう、時間はゆっくり周回させる。
-    let t = 20 + Math.random() * 100;
+    let t = 20 + random01() * 100;
 
     function resize(): void {
       const w = window.innerWidth;

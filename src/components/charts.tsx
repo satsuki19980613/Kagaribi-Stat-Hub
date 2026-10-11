@@ -70,7 +70,7 @@ function spread(ys: { id: string; y: number }[], gap: number, lo: number, hi: nu
   return new Map(sorted.map((s) => [s.id, s.y]));
 }
 
-export function LineChart(props: {
+export function LineChart(props: Readonly<{
   labels: string[];
   series: LineSeries[];
   format: (v: number) => string;
@@ -87,7 +87,7 @@ export function LineChart(props: {
   averageLabel?: { name: string; short: string };
   ariaLabel: string;
   empty?: string;
-}): JSX.Element {
+}>): JSX.Element {
   const { labels, series, format } = props;
   const H = props.height ?? 220;
   const [box, W] = useWidth<HTMLDivElement>();
@@ -139,6 +139,17 @@ export function LineChart(props: {
   // 点が少なく全部並べられる（1 つあたり 40px 以上）なら間引かない。
   const showX = (i: number): boolean =>
     n * 40 <= iw || i === 0 || i === n - 1 || (i % every === 0 && n - 1 - i >= every);
+  // 端の X ラベルは内側へ寄せる（はみ出さないように）。
+  const xAnchor = (i: number): 'start' | 'middle' | 'end' => {
+    if (n > 1 && i === 0) return 'start';
+    if (n > 1 && i === n - 1) return 'end';
+    return 'middle';
+  };
+  // 右端の名前（長い名前は 6 文字で切る）。
+  const shortName = (s: { slot: number | null; name: string }): string => {
+    if (s.slot == null) return avgName.short;
+    return s.name.length > 6 ? `${s.name.slice(0, 6)}…` : s.name;
+  };
 
   function onMove(e: RPointerEvent<SVGRectElement>): void {
     const r = e.currentTarget.getBoundingClientRect();
@@ -186,7 +197,7 @@ export function LineChart(props: {
           ))}
           {labels.map((l, i) =>
             showX(i) ? (
-              <text key={i} className="ax" x={x(i)} y={H - 8} textAnchor={n > 1 && i === 0 ? 'start' : n > 1 && i === n - 1 ? 'end' : 'middle'}>
+              <text key={x(i)} className="ax" x={x(i)} y={H - 8} textAnchor={xAnchor(i)}>
                 {l}
               </text>
             ) : null,
@@ -197,11 +208,11 @@ export function LineChart(props: {
               {s.values.map((v, i) => {
                 if (v == null) return null;
                 const solo = s.values[i - 1] == null && s.values[i + 1] == null;
-                return props.markers || solo || i === hover ? <circle key={i} className="mk" cx={x(i)} cy={y(v)} r={4} /> : null;
+                return props.markers || solo || i === hover ? <circle key={x(i)} className="mk" cx={x(i)} cy={y(v)} r={4} /> : null;
               })}
               {direct && labelY.has(s.id) && (
                 <text className="dl" x={x(lastIdx(s.values)) + 8} y={labelY.get(s.id)} dy="0.32em">
-                  {s.slot == null ? avgName.short : s.name.length > 6 ? `${s.name.slice(0, 6)}…` : s.name}
+                  {shortName(s)}
                 </text>
               )}
             </g>
@@ -240,7 +251,7 @@ export function LineChart(props: {
 }
 
 /** 単一系列の棒（クラブ合計ptのシーズン推移）。負の値は 0 線の下へ伸ばす。 */
-export function BarChart(props: { labels: string[]; values: number[]; format: (v: number) => string; height?: number; ariaLabel: string }): JSX.Element {
+export function BarChart(props: Readonly<{ labels: string[]; values: number[]; format: (v: number) => string; height?: number; ariaLabel: string }>): JSX.Element {
   const H = props.height ?? 160;
   const [box, W] = useWidth<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
@@ -274,7 +285,7 @@ export function BarChart(props: { labels: string[]; values: number[]; format: (v
             const top = Math.min(y(v), y(0));
             const h = Math.max(1, Math.abs(y(v) - y(0)));
             return (
-              <g key={i} className={`bar${hover === i ? ' on' : ''}`}>
+              <g key={cx} className={`bar${hover === i ? ' on' : ''}`}>
                 <rect className="b" x={cx - bw / 2} y={top} width={bw} height={h} />
                 <text className="ax" x={cx} y={H - 8} textAnchor="middle">
                   {labels[i]}

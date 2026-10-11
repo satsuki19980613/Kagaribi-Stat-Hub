@@ -3,7 +3,7 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 /**
  * 高さを固定して中でスクロールする箱。続きがある間は下端を薄くぼかして「まだ下にある」と見せる。
  */
-export function ScrollBox(props: { className: string; children: ReactNode }): JSX.Element {
+export function ScrollBox(props: Readonly<{ className: string; children: ReactNode }>): JSX.Element {
   const ref = useRef<HTMLDivElement>(null);
   const [more, setMore] = useState(false);
 
