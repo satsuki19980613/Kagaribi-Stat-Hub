@@ -13,7 +13,8 @@
 
 import { appendFileSync, readFileSync } from 'node:fs';
 
-const SITE = (process.env.SITE || 'https://kagaribi-stat-hub.wsk641.workers.dev').replace(/\/+$/, '');
+let SITE = process.env.SITE || 'https://kagaribi-stat-hub.wsk641.workers.dev';
+while (SITE.endsWith('/')) SITE = SITE.slice(0, -1);
 const OBSERVATORY = 'https://observatory-api.mdn.mozilla.net/api/v2/scan';
 const GRADES = ['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'F'];
 
@@ -22,8 +23,10 @@ let failed = false;
 /** label は決まった文言（Summary にも書く）、detail は届いた値（ログにだけ出す）。 */
 function report(ok, label, detail = '') {
   if (!ok) failed = true;
-  console.log(`${ok ? '✅' : '❌'} ${label}${detail ? ` — ${detail}` : ''}`);
-  lines.push(`- ${ok ? '✅' : '❌'} ${label}`);
+  const mark = ok ? '✅' : '❌';
+  const tail = detail ? ` — ${detail}` : '';
+  console.log(`${mark} ${label}${tail}`);
+  lines.push(`- ${mark} ${label}`);
 }
 
 /** public/_headers の「/*」の分（全ページ共通のセキュリティヘッダー）。vite.config.ts の siteHeaders と同じ読み方。 */

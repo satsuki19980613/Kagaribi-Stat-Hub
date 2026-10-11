@@ -20,14 +20,14 @@ const ALL: StoreName[] = [S.members, S.records, S.snapshots, S.seasons];
 function reqToPromise<T>(req: IDBRequest<T>): Promise<T> {
   return new Promise((resolve, reject) => {
     req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+    req.onerror = () => reject(req.error ?? new Error('IndexedDB request failed'));
   });
 }
 
 function done(t: IDBTransaction): Promise<void> {
   return new Promise((resolve, reject) => {
     t.oncomplete = () => resolve();
-    t.onerror = () => reject(t.error);
+    t.onerror = () => reject(t.error ?? new Error('IndexedDB transaction failed'));
     t.onabort = () => reject(t.error ?? new Error('aborted'));
   });
 }
@@ -56,7 +56,7 @@ function openDb(): Promise<IDBDatabase> {
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => {
       dbPromise = null;
-      reject(req.error);
+      reject(req.error ?? new Error('IndexedDB open failed'));
     };
   });
   return dbPromise;
@@ -78,7 +78,8 @@ export async function loadAll(): Promise<AppData> {
     reqToPromise(t.objectStore(S.snapshots).getAll()) as Promise<StatSnapshot[]>,
     reqToPromise(t.objectStore(S.seasons).getAll()) as Promise<SeasonOverride[]>,
   ]);
-  return { members: members.sort((a, b) => a.order - b.order), records, snapshots, seasons };
+  members.sort((a, b) => a.order - b.order);
+  return { members, records, snapshots, seasons };
 }
 
 export function putMember(m: Member): Promise<void> {

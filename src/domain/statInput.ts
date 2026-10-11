@@ -21,8 +21,8 @@ export const EMPTY_STAT_TEXT: StatText = { wins: '', vpip: '', hands: '' };
 export function readNum(s: string): number | undefined {
   const t = s.trim().replace(/[,，%％]/g, '');
   if (t === '') return undefined;
-  const n = Number(t.replace(/[０-９．]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0)));
-  return Number.isFinite(n) ? n : NaN;
+  const n = Number(t.replace(/[０-９．]/g, (c) => String.fromCodePoint(c.codePointAt(0)! - 0xfee0)));
+  return Number.isFinite(n) ? n : Number.NaN;
 }
 
 export function isBlankStat(t: StatText): boolean {
@@ -34,17 +34,22 @@ export function isBlankStat(t: StatText): boolean {
  * matches はその時点の参加回数（優勝回数の上限チェックと、スタッツを入れる前提に使う）。
  */
 export function parseStatText(t: StatText, matches: number): { values: StatValues | null; issues: string[] } {
-  const issues: string[] = [];
   const w = readNum(t.wins);
   const v = readNum(t.vpip);
   const h = readNum(t.hands);
+  const issues = statIssues(w, v, h, matches);
+  if (issues.length) return { values: null, issues };
+  if (w === undefined && v === undefined && h === undefined) return { values: null, issues };
+  return { values: { ...(w !== undefined ? { wins: w } : {}), ...(v !== undefined ? { vpip: v } : {}), ...(h !== undefined ? { hands: h } : {}) }, issues };
+}
+
+function statIssues(w: number | undefined, v: number | undefined, h: number | undefined, matches: number): string[] {
+  const issues: string[] = [];
   if (w !== undefined && (!Number.isInteger(w) || w < 0)) issues.push('優勝回数は 0 以上の整数で入力してください。');
   else if (w !== undefined && w > matches) issues.push('優勝回数が参加回数を超えています。');
   if (v !== undefined && !(v > 0 && v <= 100)) issues.push('VPIP は 0〜100 の % で入力してください。');
   if (h !== undefined && (!Number.isInteger(h) || h < 0)) issues.push('参加ハンド数は 0 以上の整数で入力してください。');
   if ((v === undefined) !== (h === undefined)) issues.push('VPIP と参加ハンド数はセットで入力してください（生存ターン数の計算に両方使います）。');
   if ((v !== undefined || h !== undefined) && matches === 0) issues.push('スタッツを入れるときは参加回数も入力してください。');
-  if (issues.length) return { values: null, issues };
-  if (w === undefined && v === undefined && h === undefined) return { values: null, issues };
-  return { values: { ...(w !== undefined ? { wins: w } : {}), ...(v !== undefined ? { vpip: v } : {}), ...(h !== undefined ? { hands: h } : {}) }, issues };
+  return issues;
 }

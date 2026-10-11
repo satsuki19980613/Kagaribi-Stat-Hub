@@ -15,6 +15,12 @@ export function parseIso(s: string): { y: number; m: number; d: number } {
   return { y: y ?? 0, m: m ?? 0, d: d ?? 0 };
 }
 
+/** YYYY-MM-DD を古い順に並べる比較（固定長なので文字コード順＝日付順）。 */
+export function compareIso(a: string, b: string): number {
+  if (a === b) return 0;
+  return a < b ? -1 : 1;
+}
+
 export function isIsoDate(s: unknown): s is string {
   if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
   const { y, m, d } = parseIso(s);
@@ -58,5 +64,5 @@ export function shortDate(s: string): string {
 
 /** 2026/10/03 */
 export function longDate(s: string): string {
-  return s.replace(/-/g, '/');
+  return s.replaceAll('-', '/');
 }

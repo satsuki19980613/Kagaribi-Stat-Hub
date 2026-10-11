@@ -16,6 +16,11 @@ function arg(name: string): string | undefined {
   return i >= 0 ? process.argv[i + 1] : undefined;
 }
 
+function fmtGain(gain: number | null): string {
+  if (gain == null) return '—';
+  return gain > 0 ? `+${gain}` : String(gain);
+}
+
 const file = arg('file');
 if (!file) {
   console.error('--file <clubs.json> が必要です');
@@ -39,7 +44,7 @@ for (const r of parsed.rounds) {
   const { errors, warnings } = checkRound(data, r);
   console.log(`\n=== S${r.season} 第${r.round}節: ${r.clubs.length} クラブ ===`);
   for (const c of [...r.clubs].sort((a, b) => a.rank - b.rank || b.total - a.total)) {
-    const gain = c.gain == null ? '—' : c.gain > 0 ? `+${c.gain}` : String(c.gain);
+    const gain = fmtGain(c.gain);
     console.log(`  ${String(c.rank).padStart(2)} (${c.prev ?? '外'})  ${String(c.total).padStart(4)}  ${gain.padStart(4)}  ${c.name}`);
   }
   if (warnings.length) {
