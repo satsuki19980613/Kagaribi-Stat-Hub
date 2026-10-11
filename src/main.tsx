@@ -4,6 +4,7 @@ import { App } from './App';
 import { initPwa } from './pwaUpdate';
 import './fonts.css';
 import './style.css';
+import './theme.css';
 
 // アプリの枠を実際に見えている高さに合わせる（モバイルのアドレスバー・キーボード対策）。
 function fitViewport(): void {
