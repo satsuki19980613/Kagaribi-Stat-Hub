@@ -1,7 +1,7 @@
 {
  "format": "kagaribi-club-ranking",
  "version": 1,
- "updatedAt": "2026-10-14T03:19:56.560Z",
+ "updatedAt": "2026-10-14T03:33:54.292Z",
  "rounds": [
   {"season": 31, "round": 1, "clubs": [
     {"rank":1,"prev":null,"name":"【γ】","total":56,"gain":56},
@@ -100,6 +100,36 @@
     {"rank":28,"prev":null,"name":"青雪隊","total":96,"gain":null},
     {"rank":29,"prev":28,"name":"Versailles","total":95,"gain":34},
     {"rank":30,"prev":null,"name":"リバーでぴえん","total":94,"gain":null}
+  ]},
+  {"season": 31, "round": 4, "clubs": [
+    {"rank":1,"prev":2,"name":"Accentier","total":181,"gain":45},
+    {"rank":2,"prev":1,"name":"SB from リンプして時雨","total":177,"gain":39},
+    {"rank":3,"prev":9,"name":"ぼっちの会","total":174,"gain":56},
+    {"rank":4,"prev":6,"name":"すとろべりー☆てぃると","total":173,"gain":50},
+    {"rank":5,"prev":4,"name":"【γ】","total":164,"gain":39},
+    {"rank":6,"prev":25,"name":"燎","total":159,"gain":55},
+    {"rank":7,"prev":3,"name":"Mix-Excellent","total":156,"gain":28},
+    {"rank":8,"prev":15,"name":"明日の事はサイコロで決める会","total":154,"gain":41},
+    {"rank":8,"prev":8,"name":"日本Poker研究所(JPL)","total":154,"gain":34},
+    {"rank":10,"prev":13,"name":"Confidence man","total":152,"gain":38},
+    {"rank":10,"prev":10,"name":"Black Box","total":152,"gain":36},
+    {"rank":12,"prev":13,"name":"ルイーダの酒場","total":149,"gain":35},
+    {"rank":12,"prev":7,"name":"最終兵器りんごちゃん","total":149,"gain":27},
+    {"rank":14,"prev":4,"name":"Close it にーなな★","total":148,"gain":23},
+    {"rank":15,"prev":18,"name":"SHIELDS","total":146,"gain":36},
+    {"rank":16,"prev":16,"name":"SANG-FROID","total":145,"gain":33},
+    {"rank":16,"prev":10,"name":"ポーカー攻略部","total":145,"gain":29},
+    {"rank":18,"prev":20,"name":"33−4","total":142,"gain":35},
+    {"rank":19,"prev":22,"name":"#41","total":141,"gain":35},
+    {"rank":19,"prev":17,"name":"Azul Ardiente","total":141,"gain":30},
+    {"rank":19,"prev":10,"name":"ぶちまろふぁんくらぶ","total":141,"gain":25},
+    {"rank":19,"prev":26,"name":"Famous Day","total":141,"gain":40},
+    {"rank":23,"prev":18,"name":"ポカたまですこ","total":140,"gain":30},
+    {"rank":24,"prev":22,"name":"髭 HOUSE","total":133,"gain":27},
+    {"rank":24,"prev":27,"name":"あるてぃめっと！","total":133,"gain":36},
+    {"rank":26,"prev":null,"name":"COUNTERS","total":130,"gain":null},
+    {"rank":27,"prev":20,"name":"シニチロー門","total":128,"gain":21},
+    {"rank":29,"prev":null,"name":"Royal Torch","total":125,"gain":null}
   ]},
   {"season": 31, "round": 5, "clubs": [
     {"rank":1,"prev":3,"name":"ぼっちの会","total":225,"gain":51},
