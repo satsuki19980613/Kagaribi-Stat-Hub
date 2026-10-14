@@ -1,7 +1,7 @@
 {
  "format": "kagaribi-club-ranking",
  "version": 1,
- "updatedAt": "2026-10-09T11:54:19.153Z",
+ "updatedAt": "2026-10-14T03:19:56.560Z",
  "rounds": [
   {"season": 31, "round": 1, "clubs": [
     {"rank":1,"prev":null,"name":"【γ】","total":56,"gain":56},
@@ -100,6 +100,38 @@
     {"rank":28,"prev":null,"name":"青雪隊","total":96,"gain":null},
     {"rank":29,"prev":28,"name":"Versailles","total":95,"gain":34},
     {"rank":30,"prev":null,"name":"リバーでぴえん","total":94,"gain":null}
+  ]},
+  {"season": 31, "round": 5, "clubs": [
+    {"rank":1,"prev":3,"name":"ぼっちの会","total":225,"gain":51},
+    {"rank":2,"prev":1,"name":"Accentier","total":220,"gain":39},
+    {"rank":3,"prev":6,"name":"燎","total":217,"gain":58},
+    {"rank":4,"prev":2,"name":"SB from リンプして時雨","total":214,"gain":37},
+    {"rank":5,"prev":5,"name":"【γ】","total":208,"gain":44},
+    {"rank":6,"prev":7,"name":"Mix-Excellent","total":204,"gain":48},
+    {"rank":7,"prev":10,"name":"Confidence man","total":197,"gain":45},
+    {"rank":7,"prev":4,"name":"すとろべりー☆てぃると","total":197,"gain":24},
+    {"rank":9,"prev":8,"name":"明日の事はサイコロで決める会","total":196,"gain":42},
+    {"rank":10,"prev":8,"name":"日本Poker研究所(JPL)","total":195,"gain":41},
+    {"rank":11,"prev":15,"name":"SHIELDS","total":193,"gain":47},
+    {"rank":12,"prev":10,"name":"Black Box","total":190,"gain":38},
+    {"rank":13,"prev":14,"name":"Close it にーなな★","total":189,"gain":41},
+    {"rank":13,"prev":12,"name":"ルイーダの酒場","total":189,"gain":40},
+    {"rank":15,"prev":19,"name":"#41","total":184,"gain":43},
+    {"rank":16,"prev":19,"name":"Azul Ardiente","total":181,"gain":40},
+    {"rank":17,"prev":27,"name":"シニチロー門","total":180,"gain":52},
+    {"rank":17,"prev":23,"name":"ポカたまですこ","total":180,"gain":40},
+    {"rank":19,"prev":18,"name":"33−4","total":176,"gain":34},
+    {"rank":20,"prev":16,"name":"SANG-FROID","total":175,"gain":30},
+    {"rank":20,"prev":12,"name":"最終兵器りんごちゃん","total":175,"gain":26},
+    {"rank":22,"prev":16,"name":"ポーカー攻略部","total":174,"gain":29},
+    {"rank":23,"prev":19,"name":"ぶちまろふぁんくらぶ","total":172,"gain":31},
+    {"rank":24,"prev":19,"name":"Famous Day","total":171,"gain":30},
+    {"rank":24,"prev":24,"name":"髭 HOUSE","total":171,"gain":38},
+    {"rank":26,"prev":24,"name":"あるてぃめっと！","total":167,"gain":34},
+    {"rank":27,"prev":26,"name":"COUNTERS","total":162,"gain":32},
+    {"rank":27,"prev":null,"name":"GOGOマフィン","total":162,"gain":null},
+    {"rank":29,"prev":null,"name":"リバーでぴえん","total":157,"gain":null},
+    {"rank":30,"prev":29,"name":"Royal Torch","total":156,"gain":31}
   ]}
  ]
 }
