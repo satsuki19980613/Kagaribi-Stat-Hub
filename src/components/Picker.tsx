@@ -13,12 +13,20 @@ export interface PickItem {
   note?: string;
 }
 
+/** 押された（指が乗った）一覧の行の番号。行の外なら null。 */
+function optionIndex(target: EventTarget): number | null {
+  const el = target instanceof Element ? target.closest<HTMLElement>('[role="option"]') : null;
+  const i = Number(el?.dataset.index);
+  return el && Number.isInteger(i) ? i : null;
+}
+
 /**
  * クラブを選ぶプルダウン。ブラウザの select は PC で開いた一覧の色を変えられず、
  * ダークの文字色のまま白地に出て読めないので、一覧も自前で描く。
  *
  * 欄はボタン、開いた一覧は listbox（aria-activedescendant で今の行を示す）。
  * ↑↓・Home・End・PageUp・PageDown で動き、Enter / Space で選び、Esc・Tab・外側のタップ・端末の戻るで閉じる。
+ * 行の押下と指の動きは一覧（listbox）でまとめて受ける。
  * 一覧はパネルのぼかし（backdrop-filter）や縦スクロールに切られないよう body の直下に出し、
  * 画面のスクロールや大きさが変わったら閉じる。
  */
@@ -53,6 +61,7 @@ export function Picker(props: Readonly<{
     0,
   );
   const selected = selIndex > 0 ? rows[selIndex] : null;
+  const current = selected ? selected.label + (props.suffix ?? '') : 'なし';
 
   const close = (refocus: boolean): void => {
     setOpen(false);
@@ -149,7 +158,7 @@ export function Picker(props: Readonly<{
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={open ? `${id}-list` : undefined}
-        aria-label={`${props.label}: ${selected ? `${selected.label}${props.suffix ?? ''}` : 'なし'}`}
+        aria-label={`${props.label}: ${current}`}
         disabled={props.disabled}
         onClick={() => (open ? close(false) : show(selIndex))}
         onKeyDown={onButtonKey}
@@ -182,6 +191,14 @@ export function Picker(props: Readonly<{
             aria-activedescendant={`${id}-${active}`}
             style={style}
             onKeyDown={onListKey}
+            onClick={(e) => {
+              const i = optionIndex(e.target);
+              if (i != null) choose(i);
+            }}
+            onPointerMove={(e) => {
+              const i = optionIndex(e.target);
+              if (i != null && i !== active) setActive(i);
+            }}
           >
             {props.caption && (
               <div className="pick-cap" aria-hidden="true">
@@ -193,12 +210,12 @@ export function Picker(props: Readonly<{
                 key={r.value}
                 id={`${id}-${i}`}
                 role="option"
+                tabIndex={-1}
+                data-index={i}
                 aria-selected={i === selIndex}
                 className={`pick-op${i === 0 ? ' none' : ''}${i === active ? ' act' : ''}`}
-                onPointerMove={() => setActive(i)}
-                onClick={() => choose(i)}
               >
-                <span className="pick-rk">{r.rank != null ? r.rank : ''}</span>
+                <span className="pick-rk">{r.rank ?? ''}</span>
                 <span className="pick-nm">{i === 0 ? '選ばない' : r.label}</span>
                 {r.note && <span className="pick-nt">{r.note}</span>}
               </div>

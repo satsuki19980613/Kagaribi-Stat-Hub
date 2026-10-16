@@ -91,13 +91,18 @@ async function checkObservatory() {
   );
 }
 
-for (const step of [checkSite, checkClubs, checkObservatory]) {
+/** 1 つの確認を走らせる（止まっても次へ進む）。確認は順に 1 つずつ行う。 */
+async function run(step) {
   try {
     await step();
   } catch (e) {
     report(false, `${step.name} が止まった`, e instanceof Error ? e.message : String(e));
   }
 }
+
+await run(checkSite);
+await run(checkClubs);
+await run(checkObservatory);
 
 if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### Live\n${lines.join('\n')}\n`);
 process.exit(failed ? 1 : 0);
