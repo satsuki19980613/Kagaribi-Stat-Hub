@@ -1,3 +1,4 @@
+import { PixelBear } from '../components/PixelBear';
 import { InfoButton, InfoList } from '../components/ui';
 import type { FileStatus } from '../data/autoBackup';
 import { shortDate } from '../domain/date';
@@ -39,7 +40,7 @@ export function Menu(props: Readonly<{
   const matchToday = isMatchDay(today, data.seasons);
 
   return (
-    <div className="pane">
+    <div className="pane home">
       {props.demo && (
         <div className="notice ok demo-note">
           <b>DEMO</b> サンプルデータ入りのデモ版です。今日を {shortDate(today)} として表示しています。自由に触って大丈夫です。
@@ -145,6 +146,9 @@ export function Menu(props: Readonly<{
         <button type="button" className="btn sm ghost" onClick={props.onBackup}>
           バックアップ
         </button>
+      </div>
+      <div className="home-bear">
+        <PixelBear />
       </div>
     </div>
   );
