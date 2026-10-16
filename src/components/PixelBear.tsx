@@ -94,7 +94,7 @@ export function PixelBear(): JSX.Element {
         if (state.current) state.current = poke(state.current);
       }}
     >
-      <canvas ref={canvas} height={STAGE_H} style={{ height: STAGE_H * DOT }} aria-hidden="true" />
+      <canvas ref={canvas} height={STAGE_H} style={{ height: STAGE_H * DOT }} />
     </button>
   );
 }

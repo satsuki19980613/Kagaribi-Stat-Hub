@@ -19,9 +19,9 @@ describe('bearSprites', () => {
   it('どの絵も行の幅がそろい、決まった色の文字だけでできている', () => {
     const all = [...Object.values(BEAR_FRAMES), ...BALL_FRAMES, HEART, ZZZ];
     for (const sp of all) {
-      const w = sp[0]?.length;
+      const w = sp[0]?.length ?? 0;
       for (const row of sp) {
-        expect(row.length).toBe(w);
+        expect(row).toHaveLength(w);
         for (const c of row) expect(c === '.' || c in BEAR_COLORS).toBe(true);
       }
     }
