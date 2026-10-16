@@ -1,23 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { BALL_W, BEAR_W, bearPose, initialBear, poke, seededRand, stepBear, type BearState } from './bearLogic';
-import { BALL_FRAMES, BEAR_COLORS, BEAR_FRAMES, HEART, ZZZ } from './bearSprites';
+import { BEAR_W, LYING_W, STAGE_H, createBear, isLying, type ActName, type Scene } from './bearLogic';
+import { BEAR_COLORS, LYING, POSES, PROPS, composePose, head, type Sprite } from './bearSprites';
 
-const W = 40;
+function live(width: number, ticks: number, seed: number, hour = 12): Scene[] {
+  const bear = createBear(width, seed, () => hour);
+  return Array.from({ length: ticks }, () => bear.tick(width));
+}
 
-function run(s: BearState, n: number, width = W, seed = 1): BearState[] {
-  const rand = seededRand(seed);
-  const out: BearState[] = [];
-  let cur = s;
-  for (let i = 0; i < n; i += 1) {
-    cur = stepBear(cur, width, rand);
-    out.push(cur);
-  }
-  return out;
+function spriteOf(s: Scene): Sprite {
+  return isLying(s.look) ? LYING[s.look] : composePose(POSES[s.look]);
 }
 
 describe('bearSprites', () => {
   it('どの絵も行の幅がそろい、決まった色の文字だけでできている', () => {
-    const all = [...Object.values(BEAR_FRAMES), ...BALL_FRAMES, HEART, ZZZ];
+    const all: Sprite[] = [...Object.values(POSES).map(composePose), ...Object.values(LYING), ...Object.values(PROPS)];
     for (const sp of all) {
       const w = sp[0]?.length ?? 0;
       for (const row of sp) {
@@ -26,61 +22,91 @@ describe('bearSprites', () => {
       }
     }
   });
+
+  it('立ち姿は 16 ドット四方、寝ころびは 20 ドット幅', () => {
+    for (const p of Object.values(POSES)) expect(composePose(p)[0]).toHaveLength(BEAR_W);
+    for (const sp of Object.values(LYING)) expect(sp[0]).toHaveLength(LYING_W);
+  });
+
+  it('右目は左目の鏡写し、右向きの顔は 1 ドット右にずれる', () => {
+    expect(head('open')[5]).toBe('offwefffffewffdo');
+    expect(head('open', 'none', 1)[5]).toBe('offfwefffffewfdo');
+  });
 });
 
-describe('stepBear', () => {
-  it('長く動かしても、クマもボールもステージからはみ出さない', () => {
-    for (const seed of [1, 2, 3, 42]) {
-      const states = run(initialBear(W, seededRand(seed)), 3000, W, seed);
-      for (const s of states) {
-        expect(s.x).toBeGreaterThanOrEqual(0);
-        expect(s.x).toBeLessThanOrEqual(W - BEAR_W);
-        if (s.ball != null) {
-          expect(s.ball).toBeGreaterThanOrEqual(0);
-          expect(s.ball).toBeLessThanOrEqual(W - BALL_W);
+describe('createBear', () => {
+  const widths = [16, 30, 45, 60, 100];
+
+  it('長く暮らしても、クマも小物もステージの中に収まる', () => {
+    for (const width of widths) {
+      for (const seed of [1, 7, 42]) {
+        for (const s of live(width, 4000, seed)) {
+          const sp = spriteOf(s);
+          const bw = sp[0]?.length ?? 0;
+          expect(s.x).toBeGreaterThanOrEqual(0);
+          // 寝ころびはステージより広いときだけはみ出してよい。
+          expect(s.x).toBeLessThanOrEqual(Math.max(0, width - bw));
+          expect(s.lift + sp.length).toBeLessThanOrEqual(STAGE_H);
+          for (const p of s.props) {
+            expect(PROPS[p.key]).toBeDefined();
+            // ちょうちょは端の外から飛んでくるので、少しだけ外を許す。
+            expect(p.x).toBeGreaterThanOrEqual(-8);
+            expect(p.x).toBeLessThanOrEqual(Math.max(width, LYING_W) + 1);
+            expect(p.y).toBeGreaterThanOrEqual(0);
+          }
         }
       }
-      // 歩く・寝る・遊ぶ・跳ねるが、どれも一度は出てくる。
-      expect(new Set(states.map((s) => s.mode))).toEqual(new Set(['idle', 'walk', 'sleep', 'play', 'hop']));
     }
   });
 
-  it('歩くと行き先に着いて次の様子に移る', () => {
-    const s: BearState = { mode: 'walk', t: 0, dur: 999, x: 2, dir: 1, goal: 6, ball: null };
-    const states = run(s, 5);
-    expect(states.slice(0, 4).map((x) => x.x)).toEqual([3, 4, 5, 6]);
-    expect(states[4]?.mode).not.toBe('walk');
+  it('昼はいろいろな仕草が出てくる', () => {
+    const acts = new Set<ActName>();
+    for (const seed of [1, 2, 3]) for (const s of live(60, 20000, seed)) acts.add(s.act);
+    for (const a of ['idle', 'stroll', 'trip', 'snack', 'ball', 'butterfly', 'sing', 'nap', 'wave'] as const) expect(acts).toContain(a);
   });
 
-  it('幅が縮んで行き先が外に出ても、端で止まって次の様子に移る', () => {
-    const s: BearState = { mode: 'walk', t: 0, dur: 999, x: 10, dir: 1, goal: 30, ball: null };
-    const states = run(s, 20, 20);
-    expect(states.some((x) => x.mode !== 'walk')).toBe(true);
+  it('狭いステージではボールとちょうちょをしない', () => {
+    const acts = new Set(live(30, 20000, 5).map((s) => s.act));
+    expect(acts).not.toContain('ball');
+    expect(acts).not.toContain('butterfly');
   });
 
-  it('ボールを端まで転がすと跳ねる', () => {
-    const s: BearState = { mode: 'play', t: 0, dur: 999, x: 0, dir: 1, goal: 0, ball: BEAR_W + 1 };
-    const states = run(s, 60);
-    const hop = states.findIndex((x) => x.mode === 'hop');
-    expect(hop).toBeGreaterThan(0);
-    expect(states[hop - 1]?.ball).toBe(W - BALL_W);
+  it('夜はほとんど眠っている', () => {
+    const scenes = live(60, 20000, 9, 2);
+    const sleeping = scenes.filter((s) => s.look === 'sleep').length;
+    expect(sleeping / scenes.length).toBeGreaterThan(0.6);
   });
 
-  it('タップすると寝ていても起きて跳ねる', () => {
-    const s: BearState = { mode: 'sleep', t: 3, dur: 50, x: 5, dir: 1, goal: 0, ball: null };
-    const p = poke(s);
-    expect(p.mode).toBe('hop');
-    expect(bearPose(p).frame).toBe('crouch');
-    expect(bearPose({ ...p, t: 1 }).frame).toBe('cheer');
+  it('おやつはりんご・はちみつ・おにぎりを 3 口で食べ、ピーマンは食べない', () => {
+    const seen = new Set<string>();
+    for (const seed of [11, 12, 13, 14]) for (const s of live(60, 20000, seed)) for (const p of s.props) seen.add(p.key);
+    for (const k of ['apple2', 'honey2', 'rice2', 'pepper', 'heart', 'note', 'flyA', 'blanket', 'bubbleL', 'zBig', 'sweat']) expect(seen).toContain(k);
   });
-});
 
-describe('bearPose', () => {
-  it('左へ歩くときは反転し、寝ているときは寝ころんだ絵', () => {
-    const base: BearState = { mode: 'walk', t: 0, dur: 999, x: 5, dir: -1, goal: 0, ball: null };
-    expect(bearPose(base)).toEqual({ frame: 'walkA', lift: 0, flip: true });
-    expect(bearPose({ ...base, t: 1 })).toEqual({ frame: 'walkB', lift: 1, flip: true });
-    expect(bearPose({ ...base, mode: 'sleep' }).frame).toBe('sleep');
-    expect(bearPose({ ...base, mode: 'idle', t: 21 }).frame).toBe('blink');
+  it('寝ているときにタップすると飛び起きる', () => {
+    const bear = createBear(60, 3, () => 2);
+    let s = bear.tick(60);
+    for (let i = 0; i < 5000 && s.look !== 'sleep'; i += 1) s = bear.tick(60);
+    expect(s.look).toBe('sleep');
+    bear.tap();
+    s = bear.tick(60);
+    expect(s.act).toBe('react');
+    expect(s.look).toBe('surprised');
+    expect(s.props.map((p) => p.key)).toContain('bang');
+  });
+
+  it('何度もつつくと怒る', () => {
+    const bear = createBear(60, 4, () => 12);
+    bear.tick(60);
+    for (let i = 0; i < 4; i += 1) bear.tap();
+    const s = bear.tick(60);
+    expect(s.props.map((p) => p.key)).toContain('anger');
+  });
+
+  it('左を向くと横向きの絵は反転し、正面の絵は反転しない', () => {
+    for (const s of live(60, 5000, 21)) {
+      if (s.look === 'stand' || s.look === 'blink' || s.look === 'breathe') expect(s.flip).toBe(false);
+    }
+    expect(live(60, 5000, 21).some((s) => s.look === 'walkA' && s.flip)).toBe(true);
   });
 });
