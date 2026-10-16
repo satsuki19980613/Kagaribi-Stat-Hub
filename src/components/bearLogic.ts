@@ -1,4 +1,4 @@
-import { LYING, PROPS, type LyingKey, type PoseKey, type PropKey } from './bearSprites';
+import { LYING, PROPS, pickVariant, type BearVariant, type LyingKey, type PoseKey, type PropKey } from './bearSprites';
 
 /**
  * 見出しのクマの暮らし。仕草（ぼんやり・おさんぽ・おやつ・ボール・ちょうちょ・うた・おひるね…）を
@@ -580,28 +580,52 @@ function* life(w: World): Act {
   }
 }
 
+/**
+ * レアクマのきらきら。出てきた最初の 3 秒は周りに星がまたたき、きんのくまはその後も時々光る。
+ * t は暮らし始めてからのコマ数。
+ */
+function rareSparkles(variant: BearVariant, t: number, s: Scene): Prop[] {
+  if (variant === 'brown') return [];
+  const intro = t < 30;
+  if (!intro && (variant !== 'gold' || t % 50 >= 8)) return [];
+  const k = Math.floor(t / 4) % 3;
+  const spots: readonly (readonly [number, number])[] = [[-3, 4], [15, 10], [2, 16], [12, 2]];
+  const [dx, dy] = spots[(k + Math.floor(t / 12)) % spots.length] ?? [0, 0];
+  return [{ key: k === 1 ? 'sparkle' : 'sparkleS', x: s.x + dx, y: s.lift + dy }];
+}
+
 export interface Bear {
+  /** 毛の色（レアクマ）。 */
+  readonly variant: BearVariant;
   /** 1 コマ進めて、そのコマの絵を返す。width はステージの幅（ドット）。 */
   tick: (width: number) => Scene;
   /** タップされた。 */
   tap: () => void;
 }
 
-export function createBear(width: number, seed: number, hour: () => number = () => new Date().getHours()): Bear {
+/** クマを生む。variant を省くと、乱数で色を引く（たまにレアクマ）。 */
+export function createBear(width: number, seed: number, hour: () => number = () => new Date().getHours(), variant?: BearVariant): Bear {
   const w: World = { width, x: 0, dir: 1, rand: seededRand(seed), hour, act: 'idle', sleeping: false };
+  const color = variant ?? pickVariant(w.rand());
   w.x = Math.floor(maxX(w) / 2);
   let gen: Act = life(w);
   let ticks = 0;
   let tapTicks: number[] = [];
+  const next = (): Scene => {
+    const r = gen.next();
+    if (!r.done) return r.value;
+    gen = life(w);
+    return gen.next().value ?? sc(w, 'stand');
+  };
   return {
-    tick(next) {
-      w.width = next;
+    variant: color,
+    tick(nextWidth) {
+      w.width = nextWidth;
       w.x = clamp(w.x, 0, maxX(w));
+      const s = next();
+      const extra = rareSparkles(color, ticks, s);
       ticks += 1;
-      const r = gen.next();
-      if (!r.done) return r.value;
-      gen = life(w);
-      return gen.next().value ?? sc(w, 'stand');
+      return extra.length ? { ...s, props: [...s.props, ...extra] } : s;
     },
     tap() {
       // 3 秒の間に何度つつかれたか。

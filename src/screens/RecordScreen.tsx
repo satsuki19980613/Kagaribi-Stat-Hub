@@ -7,7 +7,6 @@ import { latestSnapshot, survivalOf } from '../domain/stats';
 import { RANKS, fmtPt, pointsOf } from '../domain/points';
 import { isMatchDay, seasonOf } from '../domain/season';
 import { Back, ConfirmDialog, InfoButton, InfoList, PaneHead } from '../components/ui';
-import { PixelBear } from '../components/PixelBear';
 
 export interface Entry {
   date: string;
@@ -92,7 +91,7 @@ export function RecordScreen(props: Readonly<{
   return (
     <div className="pane rec-pane">
       <Back label="MENU" onClick={props.onBack} />
-      <PaneHead eyebrow="RECORD" title="記録" deco={<PixelBear />}>
+      <PaneHead eyebrow="RECORD" title="記録">
         <InfoButton title="記録のしかた">
           <InfoList
             items={[

@@ -46,6 +46,46 @@ export const BEAR_COLORS: Readonly<Record<string, string>> = {
 
 export type Sprite = readonly string[];
 
+// ---------------------------------------------------------------- 毛の色（レアクマ）
+
+export type BearVariant = 'brown' | 'white' | 'pink' | 'sky' | 'gold';
+
+/** クマの色違い。クマの絵（と持つ手）だけ、BEAR_COLORS のこの文字を差し替えて描く。 */
+export const VARIANT_COLORS: Readonly<Record<BearVariant, Readonly<Record<string, string>>>> = {
+  brown: {},
+  white: { o: '#5F6478', F: '#FFFFFF', f: '#F3F0EA', d: '#D6D0C8', l: '#FFFBF4', L: '#E6DED3', p: '#F7A3B9', n: '#3A3442', e: '#2A2630' },
+  pink: { o: '#7A3352', F: '#FFC6D7', f: '#F59DB9', d: '#D67596', l: '#FFE8F0', L: '#F4C7D7', p: '#E8507D', n: '#5A1F37', e: '#3A1424' },
+  sky: { o: '#36577A', F: '#D6EFFF', f: '#A7D6F4', d: '#7DB2DA', l: '#F3FAFF', L: '#D2E7F5', p: '#F59AB3', n: '#22384F', e: '#1C2C3D' },
+  gold: { o: '#6E4510', F: '#FFF2A6', f: '#F5C842', d: '#CF961B', l: '#FFF7D6', L: '#F1DC92', p: '#FF8FA0', n: '#4A2E08', e: '#3A2406' },
+};
+
+/** 呼び名（読み上げ用）。 */
+export const VARIANT_NAMES: Readonly<Record<BearVariant, string>> = {
+  brown: 'クマ',
+  white: 'レアなしろくま',
+  pink: 'レアなさくらくま',
+  sky: 'レアなそらくま',
+  gold: 'とってもレアなきんのくま',
+};
+
+/** レアクマの出る確率（開くたびに 1 回引く。合わせて約 3.2%、きんのくまは 500 回に 1 回）。 */
+export const RARE_ODDS: readonly (readonly [BearVariant, number])[] = [
+  ['gold', 0.002],
+  ['white', 0.01],
+  ['pink', 0.01],
+  ['sky', 0.01],
+];
+
+/** 0 以上 1 未満の数 r から色を決める。 */
+export function pickVariant(r: number): BearVariant {
+  let acc = 0;
+  for (const [v, p] of RARE_ODDS) {
+    acc += p;
+    if (r < acc) return v;
+  }
+  return 'brown';
+}
+
 // ---------------------------------------------------------------- 頭
 
 export type Eyes = 'open' | 'closed' | 'happy' | 'sleep' | 'up' | 'round' | 'squeeze' | 'wink';

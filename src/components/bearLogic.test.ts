@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { BEAR_W, LYING_W, STAGE_H, createBear, isLying, type ActName, type Scene } from './bearLogic';
-import { BEAR_COLORS, LYING, POSES, PROPS, composePose, head, type Sprite } from './bearSprites';
+import { BEAR_W, LYING_W, STAGE_H, createBear, isLying, seededRand, type ActName, type Scene } from './bearLogic';
+import { BEAR_COLORS, LYING, POSES, PROPS, RARE_ODDS, VARIANT_COLORS, composePose, head, pickVariant, type BearVariant, type Sprite } from './bearSprites';
 
 function live(width: number, ticks: number, seed: number, hour = 12): Scene[] {
-  const bear = createBear(width, seed, () => hour);
+  const bear = createBear(width, seed, () => hour, 'brown');
   return Array.from({ length: ticks }, () => bear.tick(width));
 }
 
@@ -108,5 +108,39 @@ describe('createBear', () => {
       if (s.look === 'stand' || s.look === 'blink' || s.look === 'breathe') expect(s.flip).toBe(false);
     }
     expect(live(60, 5000, 21).some((s) => s.look === 'walkA' && s.flip)).toBe(true);
+  });
+});
+
+describe('レアクマ', () => {
+  it('色違いは BEAR_COLORS にある文字だけを差し替える', () => {
+    for (const colors of Object.values(VARIANT_COLORS)) for (const k of Object.keys(colors)) expect(k in BEAR_COLORS).toBe(true);
+  });
+
+  it('きんのくまがいちばん出にくく、レアは合わせて 3% ほど', () => {
+    expect(pickVariant(0)).toBe('gold');
+    expect(pickVariant(0.999)).toBe('brown');
+    const rand = seededRand(123);
+    const n = 200000;
+    const count: Record<BearVariant, number> = { brown: 0, white: 0, pink: 0, sky: 0, gold: 0 };
+    for (let i = 0; i < n; i += 1) count[pickVariant(rand())] += 1;
+    const rare = (n - count.brown) / n;
+    expect(rare).toBeGreaterThan(0.025);
+    expect(rare).toBeLessThan(0.04);
+    for (const [v, p] of RARE_ODDS) expect(Math.abs(count[v] / n - p)).toBeLessThan(0.002);
+    expect(count.gold).toBeLessThan(count.white);
+  });
+
+  it('レアクマは出てきたときにきらきらし、きんのくまはその後も時々光る', () => {
+    const sparkly = (v: BearVariant, from: number, to: number): number => {
+      const bear = createBear(60, 1, () => 12, v);
+      const scenes = Array.from({ length: to }, () => bear.tick(60)).slice(from);
+      return scenes.filter((s) => s.props.some((p) => p.key === 'sparkle' || p.key === 'sparkleS')).length;
+    };
+    expect(sparkly('white', 0, 30)).toBe(30);
+    expect(sparkly('gold', 0, 30)).toBe(30);
+    expect(sparkly('brown', 0, 30)).toBe(0);
+    // 3 秒を過ぎたら、きんのくまだけ時々光る（50 コマごとに 8 コマ）。
+    expect(sparkly('gold', 45, 60)).toBeGreaterThan(0);
+    expect(sparkly('white', 45, 60)).toBe(0);
   });
 });
