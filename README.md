@@ -41,7 +41,7 @@
 | 自動バックアップの履歴 | **端末のブラウザ内のみ**（直近 30 件と、それ以前は 1 日 1 件を 60 日分） | 不可 | 不可 |
 | 書き出したバックアップ（JSON。メンバーの名前を含む） | 利用者が選んだファイル | 不可 | ファイルを渡した相手 |
 | 表示設定（強調するメンバー・比較するクラブ） | **端末のブラウザ内のみ**（localStorage） | 不可 | 不可 |
-| クラブ順位（上位 30） | このリポジトリの [public/data/clubs.json](public/data/clubs.json) | 可 | 可（X で公開されている集計の転記） |
+| クラブ順位（上位 30） | このリポジトリの [public/data/clubs.json](public/data/clubs.json) | 可 | 可（公開されている集計の転記） |
 
 外部サービスに送信される情報：
 
@@ -125,7 +125,7 @@
 | `npm run typecheck` | 型検査 |
 | `npm run build:demo` | サンプルデータ入りのデモ版を `dist-demo/` にビルド。`npx vite preview --outDir dist-demo` で開く |
 | `npm run icons` | `public/icon.svg` から PWA のアイコン（PNG）を生成 |
-| `npm run ranking` | X の集計ポストからクラブ順位を `public/data/clubs.json` に取り込む |
+| `npm run ranking` | 集計からクラブ順位を `public/data/clubs.json` に取り込む |
 | `node scripts/live-check.mjs` | 公開サイトの検証（Live と同じ。`SITE=` で対象を変更できる） |
 
 デモ版は「今日」を 2026/12/17 として表示し、S32 で「急遽 1 日短縮・11/17 休催」の手動修正の例を示す。メニューの「サンプルに戻す」で初期状態に戻せる。
