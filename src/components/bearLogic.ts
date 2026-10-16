@@ -136,28 +136,33 @@ function* step(w: World, goal: number, ticks = 2, o: (i: number) => Extra = () =
 
 // ---------------------------------------------------------------- 仕草
 
+/** 息の 2 周（0.5 秒ずつ頭を沈める）の k コマ目。終わりぎわに 1 回まばたき。 */
+function breathLook(k: number): Look {
+  if (k === 16 || k === 17) return 'blink';
+  return Math.floor(k / 5) % 2 ? 'breathe' : 'stand';
+}
+
+/** ぼんやりの 1 区切り（きょろきょろ・にこっ・息のどれか）。かかったコマ数を返す。 */
+function* idleBeat(w: World): Generator<Scene, number, undefined> {
+  const roll = w.rand();
+  if (roll < 0.15) {
+    yield* hold(w, w.rand() < 0.5 ? 'lookL' : 'lookR', 7);
+    yield* hold(w, 'stand', 2);
+    return 9;
+  }
+  if (roll < 0.25) {
+    yield* hold(w, 'smile', 8);
+    return 8;
+  }
+  for (let k = 0; k < 20; k += 1) yield sc(w, breathLook(k));
+  return 20;
+}
+
 /** ぼんやり（息・まばたき・きょろきょろ・にこっ）。 */
 function* idle(w: World, n: number): Act {
   w.act = 'idle';
   let i = 0;
-  while (i < n) {
-    const roll = w.rand();
-    if (roll < 0.15) {
-      yield* hold(w, w.rand() < 0.5 ? 'lookL' : 'lookR', 7);
-      yield* hold(w, 'stand', 2);
-      i += 9;
-    } else if (roll < 0.25) {
-      yield* hold(w, 'smile', 8);
-      i += 8;
-    } else {
-      for (let k = 0; k < 20; k += 1) {
-        let look: Look = Math.floor(k / 5) % 2 ? 'breathe' : 'stand';
-        if (k === 16 || k === 17) look = 'blink';
-        yield sc(w, look);
-      }
-      i += 20;
-    }
-  }
+  while (i < n) i += yield* idleBeat(w);
 }
 
 /** つまずいて転ぶ → 汗 → 起き上がってほこりを払う。 */
@@ -317,27 +322,37 @@ class Ball {
   }
 }
 
+/** goal() の所まで 1 歩ずつ歩く（行き先は歩くたびに見直す。長くても 80 歩まで）。 */
+function* walkTo(w: World, goal: () => number, o: (i: number) => Extra): Act {
+  for (let guard = 0; guard < 80; guard += 1) {
+    if (!(yield* step(w, goal(), 1, o))) return;
+  }
+}
+
+/** けったボールを見送る i コマ目の絵。頭の上を越えたときは、まず見上げる。 */
+function watchLook(i: number, over: boolean): Look {
+  if (over && i < 6) return 'lookUp';
+  return i < 8 ? 'side' : 'stand';
+}
+
 /** ボールの所まで歩いて 1 回ける。広い方へけり、後ろに回れない（壁ぎわ）ときは広い側に立って頭の上を越えるようにける。 */
 function* kickBall(w: World, b: Ball): Act {
   const dir: 1 | -1 = w.width - 5 - b.x >= b.x ? 1 : -1;
   // クマの絵は左右に 1 ドットずつ余白があるので、ボールにぴったり付くのは右なら 15、左なら 4 ドット離れた所。
   const behind = (d: number): number => (d > 0 ? Math.round(b.x) - 15 : Math.round(b.x) + 4);
   const over = behind(dir) < 0 || behind(dir) > maxX(w);
-  const goal = (): number => clamp(behind(over ? -dir : dir), 0, maxX(w));
-  let guard = 0;
-  while (guard < 80 && (yield* step(w, goal(), 1, b.live))) guard += 1;
-  w.dir = over ? (-dir as 1 | -1) : dir;
+  const stand: 1 | -1 = over ? (-dir as 1 | -1) : dir;
+  yield* walkTo(w, () => clamp(behind(stand), 0, maxX(w)), b.live);
+  w.dir = stand;
   yield* hold(w, 'side', 3, b.live);
   b.vx = dir * (over ? 1.6 : 1.8 + w.rand() * 0.8);
   b.vy = over ? 4.6 : 2.2;
   b.over = over;
   yield* hold(w, 'kick', 3, b.live);
-  // 転がるのを見送る。頭の上を越えたときは見上げてから振り向く。
   for (let i = 0; i < 45 && b.moving; i += 1) {
-    if (over && i === 6) w.dir = dir;
-    let look: Look = i < 8 ? 'side' : 'stand';
-    if (over && i < 6) look = 'lookUp';
-    yield sc(w, look, b.live());
+    // 頭の上を越えたら振り向く。
+    if (i === 6) w.dir = dir;
+    yield sc(w, watchLook(i, over), b.live());
   }
 }
 

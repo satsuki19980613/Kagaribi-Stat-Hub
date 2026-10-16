@@ -265,7 +265,7 @@ export type PoseKey = keyof typeof POSES;
 /** ポーズを 1 枚の絵にする。体を下に置き、頭をその上に（headDy だけ沈めて）重ねる。 */
 export function composePose(p: Pose): Sprite {
   const width = p.body[0]?.length ?? 16;
-  const g = Array.from({ length: p.head.length + p.body.length }, () => Array<string>(width).fill('.'));
+  const g = Array.from({ length: p.head.length + p.body.length }, () => new Array<string>(width).fill('.'));
   const paint = (sp: Sprite, y0: number): void =>
     sp.forEach((r, dy) => [...r].forEach((c, x) => c !== '.' && stamp(g, x, y0 + dy, c)));
   paint(p.body, p.head.length);
