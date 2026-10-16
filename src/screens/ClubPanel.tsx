@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { LineChart, type LineSeries } from '../components/charts';
+import { Picker } from '../components/Picker';
 import { ScrollBox } from '../components/ScrollBox';
 import { InfoButton, InfoList } from '../components/ui';
 import type { ClubState } from '../data/clubData';
@@ -88,7 +89,7 @@ function ClubRow(props: Readonly<{ c: ClubEntry; round: number; isPick: boolean;
 
 /**
  * クラブ順位（上位 30）との比較。メンバーのグラフとは別のパネルにして、単位（クラブの累計）を混ぜない。
- * 線は 3 本まで: 燎（ピンク）・選んだクラブ（青）・上位 30 平均（点線）。比べるクラブは右上のプルダウンで選ぶ。
+ * 線は 3 本まで: 燎（ピンク）・選んだクラブ（青）・上位 30 平均（点線）。比べるクラブは右上の一覧で選ぶ。
  */
 export function ClubPanel(props: Readonly<{ data: AppData; club: ClubState; season: number; today: string }>): JSX.Element {
   const { data, club, season, today } = props;
@@ -136,17 +137,17 @@ export function ClubPanel(props: Readonly<{ data: AppData; club: ClubState; seas
             <p>ネットにつながったとき（起動時・画面に戻ったとき）に自動で読み込み、オフラインのときは前回の内容を出します。</p>
           </InfoButton>
         </span>
-        <label className="club-pick">
-          <span className="sr">比べるクラブ</span>
-          <select value={picked?.name ?? ''} onChange={(e) => setPick(e.target.value)} disabled={others.length === 0}>
-            <option value="">比べるクラブ</option>
-            {others.map((c) => (
-              <option key={c.name} value={c.name}>
-                {c.rank}位 {c.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="club-pick">
+          <Picker
+            value={picked?.name ?? ''}
+            items={others.map((c) => ({ value: c.name, label: c.name, rank: c.rank, note: `${c.total}pt` }))}
+            placeholder="比べるクラブ"
+            label="比べるクラブ"
+            caption={latest ? `S${season} 第${latest.round}節の順位` : undefined}
+            disabled={others.length === 0}
+            onChange={setPick}
+          />
+        </div>
       </div>
       <LineChart
         labels={labels}

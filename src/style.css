@@ -559,11 +559,32 @@ p,.hint,.notice,small,.mbtn small{text-wrap:pretty}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .club .panel-h{align-items:center;flex-wrap:nowrap}
 .club-pick{margin-left:auto;min-width:0;flex:0 1 auto;max-width:58%}
-.club-pick select{width:100%;max-width:100%;appearance:none;-webkit-appearance:none;border:1px solid var(--hair-2);background:var(--glass-hi);color:var(--ink);
-  font:inherit;font-size:13px;font-weight:700;padding:6px 26px 6px 10px;text-overflow:ellipsis;white-space:nowrap;overflow:hidden;cursor:pointer;
-  background-image:linear-gradient(45deg,transparent 50%,var(--ink-2) 50%),linear-gradient(135deg,var(--ink-2) 50%,transparent 50%);
-  background-position:right 12px center,right 7px center;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
-.club-pick select:disabled{opacity:.5;cursor:default}
+/* クラブを選ぶ欄と、開いた一覧（components/Picker.tsx。ブラウザの select の一覧は PC で色を変えられないので自前） */
+.club-pick{--c:var(--s1)}
+.pick-btn{display:flex;align-items:center;gap:8px;width:100%;min-width:0;min-height:34px;padding:6px 10px;border:1px solid var(--hair-2);background:var(--face);color:var(--ink);
+  font:inherit;font-size:13px;font-weight:700;text-align:left;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.pick-btn:disabled{opacity:.5;cursor:default}
+@media (hover:hover){.pick-btn:not(:disabled):not([aria-expanded="true"]):hover{border-color:var(--ink-2)}}
+.pick-btn[aria-expanded="true"]{border-color:var(--you)}
+.pick-btn.on{box-shadow:inset 3px 0 0 var(--c)}
+.pick-v{flex:1 1 auto;min-width:0;display:flex;align-items:baseline;gap:6px;overflow:hidden;white-space:nowrap}
+.pick-v .pick-nm{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.pick-v .pick-rk{flex:none;font-family:var(--f-num);font-size:12px;font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.pick-sfx{flex:none;font-size:11px;font-weight:600;color:var(--muted)}
+.pick-ph{color:var(--ink-2)}
+.pick-cv{flex:none;width:12px;height:12px;color:var(--ink-2);transition:transform .15s}
+.pick-btn[aria-expanded="true"] .pick-cv{transform:rotate(180deg)}
+.pick-pop{position:fixed;z-index:60;overflow-y:auto;overscroll-behavior:contain;padding:4px 0;background:var(--face);color:var(--ink);
+  border:1px solid var(--hair-2);box-shadow:var(--shadow);outline:none;font-family:var(--f-ui);word-break:normal}
+.pick-cap{margin-bottom:4px;padding:6px 12px 8px;border-bottom:1px solid var(--hair);font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.04em}
+.pick-op{display:grid;grid-template-columns:2.2em minmax(0,1fr) auto;align-items:center;gap:10px;padding:8px 12px;font-size:14px;font-weight:700;line-height:1.35;cursor:pointer}
+.pick-op .pick-rk{font-family:var(--f-num);font-size:12px;font-weight:600;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.pick-op .pick-nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pick-nt{font-family:var(--f-num);font-size:12px;font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.pick-op.none .pick-nm{color:var(--ink-2);font-weight:600}
+.pick-op.act{background:color-mix(in srgb,var(--you) 14%,var(--face))}
+.pick-op[aria-selected="true"]{box-shadow:inset 3px 0 0 var(--you)}
+.pick-op[aria-selected="true"] .pick-nm{color:var(--you-text)}
 .chart .own .ln{stroke-width:2.5}
 .club-legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;font-weight:700;color:var(--ink-2)}
 .club-legend>span{display:inline-flex;align-items:center;gap:6px;min-width:0}
@@ -587,5 +608,5 @@ p,.hint,.notice,small,.mbtn small{text-wrap:pretty}
 .tip-r.cmp .key,.cmp-pick .key{background:radial-gradient(circle,var(--cmp) 1.5px,transparent 1.9px) 0 50%/6px 6px repeat-x}
 .panel-h.cmp-h{flex-wrap:nowrap;align-items:center}
 .cmp-pick{display:flex;align-items:center;gap:6px}
+.cmp-pick{--c:var(--cmp)}
 .cmp-pick .key{display:inline-block;flex:none;width:18px;height:6px}
-.cmp-pick select{min-width:0}
