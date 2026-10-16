@@ -56,14 +56,15 @@ export function Back(props: Readonly<{ label?: string; onClick: () => void }>): 
   );
 }
 
-/** pane の見出し（eyebrow のタグを和文タイトルの箱に乗せる + 右端の操作）。 */
-export function PaneHead(props: Readonly<{ eyebrow: string; title: string; children?: ReactNode }>): JSX.Element {
+/** pane の見出し（eyebrow のタグを和文タイトルの箱に乗せる + 間の飾り + 右端の操作）。 */
+export function PaneHead(props: Readonly<{ eyebrow: string; title: string; deco?: ReactNode; children?: ReactNode }>): JSX.Element {
   return (
     <div className="pane-h">
       <span className="ph-t">
         <span className="eyebrow">{props.eyebrow}</span>
         <b>{props.title}</b>
       </span>
+      {props.deco}
       {props.children && <span className="acts">{props.children}</span>}
     </div>
   );

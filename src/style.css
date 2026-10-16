@@ -117,6 +117,9 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
 .pane-h{display:flex;align-items:baseline;gap:12px;margin:2px 0 2px;min-width:0}
 .pane-h b{font-size:20px;font-weight:700}
 .pane-h .acts{margin-left:auto;display:flex;gap:6px;align-self:center}
+/* 見出しの空きで暮らすドット絵のクマ（PixelBear）。幅は空いているぶんだけ、下の枠の上に立たせる */
+.pixbear{flex:1 1 0;min-width:0;align-self:flex-end;margin:0 -4px -2px;padding:0;border:0;background:none;cursor:pointer;overflow:hidden;-webkit-tap-highlight-color:transparent}
+.pixbear canvas{display:block;image-rendering:pixelated}
 .hint{font-size:12px;color:var(--muted);line-height:1.6;margin:0}
 
 /* ===== ボタン ===== */
