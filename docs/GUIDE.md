@@ -55,7 +55,7 @@
 
 - 置き場所：このリポジトリの `public/data/clubs.json`。アプリと一緒に配られ（`data/clubs.json`）、`main` に入ってデプロイされると届く
 - アプリは起動時・ネットにつながったとき・画面に戻ってきたとき（10 分おき）に読み直し、端末に残す（オフラインでは前回の内容）
-- 取り込み：Claude Code で集計ポストのスレッドをコピペして「順位を取り込んで」と頼むと、
+- 取り込み：Claude Code で集計（文章のコピペかスクリーンショット）を渡して「順位を取り込んで」と頼むと、
   [.claude/skills/club-ranking](../.claude/skills/club-ranking/SKILL.md) の手順で読み取り・前節との突き合わせ・`main` への反映まで行う
   （手で行う場合は `npm run ranking -- --file public/data/clubs.json --in <貼り付けた文章.txt> --dry` で確認してから `--dry` を外す）
 - 燎は上位 30 に入った節は公式の値、圏外の節はアプリの記録の合計で線をつなぐ

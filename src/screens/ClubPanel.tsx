@@ -79,7 +79,7 @@ function ClubRow(props: Readonly<{ c: ClubEntry; round: number; isPick: boolean;
       </td>
       <td className="nm">{c.name}</td>
       <td>{c.total}</td>
-      <td className={gainClass(c.gain)} title={c.gain == null ? '圏外から入ったクラブ（得点はポストに無い）' : undefined}>
+      <td className={gainClass(c.gain)} title={c.gain == null ? '圏外から入ったクラブ（その節の得点は集計に無い）' : undefined}>
         {fmtGain(c.gain)}
       </td>
     </tr>
@@ -124,13 +124,13 @@ export function ClubPanel(props: Readonly<{ data: AppData; club: ClubState; seas
         <span className="pt">
           <b>クラブ順位 · 上位30</b>
           <InfoButton title="クラブ順位 · 上位30">
-            <p>クラブマッチの上位 30 クラブの累計ポイントです。X の @c0pmvd さんが毎節ポストしている集計を取り込んでいます。</p>
+            <p>クラブマッチの上位 30 クラブの累計ポイントです。毎節の集計を取り込んでいます。</p>
             <InfoList
               items={[
                 [OWN_CLUB, '上位 30 に入った節は公式の値、圏外の節はこのアプリで記録したポイントの合計です。'],
                 ['選んだクラブ', '右上のプルダウンか、表の行を押して選びます。もう一度押すと外れます。'],
                 ['破線', '上位 30 クラブの累計の平均。'],
-                ['表', '最新の節の順位。↑↓ は前の節からの上がり下がり、new は圏外から入ったクラブ。「—」は圏外から入ったため、その節の得点がポストに無いものです。'],
+                ['表', '最新の節の順位。↑↓ は前の節からの上がり下がり、new は圏外から入ったクラブ。「—」は圏外から入ったため、その節の得点が集計に無いものです。'],
               ]}
             />
             <p>ネットにつながったとき（起動時・画面に戻ったとき）に自動で読み込み、オフラインのときは前回の内容を出します。</p>
