@@ -20,11 +20,18 @@ const GRADES = ['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D
 
 const lines = [];
 let failed = false;
-/** label は決まった文言（Summary にも書く）、detail は届いた値（ログにだけ出す）。 */
+/** 届いた値をログ用に 1 行へ整える（改行・制御文字を空白にして、行を偽装できないようにする。長すぎる値は切る）。 */
+function oneLine(value) {
+  return String(value)
+    .replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/g, ' ')
+    .slice(0, 300);
+}
+
+/** label は決まった文言（Summary にも書く）、detail は届いた値（ログにだけ、1 行に整えて出す）。 */
 function report(ok, label, detail = '') {
   if (!ok) failed = true;
   const mark = ok ? '✅' : '❌';
-  const tail = detail ? ` — ${detail}` : '';
+  const tail = detail ? ` — ${oneLine(detail)}` : '';
   console.log(`${mark} ${label}${tail}`);
   lines.push(`- ${mark} ${label}`);
 }
@@ -91,13 +98,18 @@ async function checkObservatory() {
   );
 }
 
-for (const step of [checkSite, checkClubs, checkObservatory]) {
+/** 1 つの確認を走らせる（止まっても次へ進む）。確認は順に 1 つずつ行う。 */
+async function run(step) {
   try {
     await step();
   } catch (e) {
     report(false, `${step.name} が止まった`, e instanceof Error ? e.message : String(e));
   }
 }
+
+await run(checkSite);
+await run(checkClubs);
+await run(checkObservatory);
 
 if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### Live\n${lines.join('\n')}\n`);
 process.exit(failed ? 1 : 0);

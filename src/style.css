@@ -289,7 +289,7 @@ dialog:focus,dialog:focus-visible{outline:none}
   .nbtn::after{content:'';position:absolute;inset:-5px -1px}
 }
 @media (max-height:560px){.mbtn{min-height:52px;font-size:18px}}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (prefers-reduced-motion:reduce){#root *,#root *::before,#root *::after{animation:none;transition:none}}
 
 /* ===================================================================
    Kagaribi Stat Hub 固有
@@ -558,9 +558,8 @@ p,.hint,.notice,small,.mbtn small{text-wrap:pretty}
 /* ===== クラブ順位（上位30）との比較 ===== */
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .club .panel-h{align-items:center;flex-wrap:nowrap}
-.club-pick{margin-left:auto;min-width:0;flex:0 1 auto;max-width:58%}
+.club-pick{--c:var(--s1);margin-left:auto;min-width:0;flex:0 1 auto;max-width:58%}
 /* クラブを選ぶ欄と、開いた一覧（components/Picker.tsx。ブラウザの select の一覧は PC で色を変えられないので自前） */
-.club-pick{--c:var(--s1)}
 .pick-btn{display:flex;align-items:center;gap:8px;width:100%;min-width:0;min-height:34px;padding:6px 10px;border:1px solid var(--hair-2);background:var(--face);color:var(--ink);
   font:inherit;font-size:13px;font-weight:700;text-align:left;cursor:pointer;transition:border-color .15s,box-shadow .15s}
 .pick-btn:disabled{opacity:.5;cursor:default}
@@ -607,6 +606,5 @@ p,.hint,.notice,small,.mbtn small{text-wrap:pretty}
 .chart .cmp .dl{fill:var(--cmp)}
 .tip-r.cmp .key,.cmp-pick .key{background:radial-gradient(circle,var(--cmp) 1.5px,transparent 1.9px) 0 50%/6px 6px repeat-x}
 .panel-h.cmp-h{flex-wrap:nowrap;align-items:center}
-.cmp-pick{display:flex;align-items:center;gap:6px}
-.cmp-pick{--c:var(--cmp)}
+.cmp-pick{--c:var(--cmp);display:flex;align-items:center;gap:6px}
 .cmp-pick .key{display:inline-block;flex:none;width:18px;height:6px}
