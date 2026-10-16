@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BarChart, LineChart, type LineSeries } from '../components/charts';
 import { ScrollBox } from '../components/ScrollBox';
+import { Picker } from '../components/Picker';
 import { Back, InfoButton, InfoList, Modal, PaneHead } from '../components/ui';
 import { longDate, shortDate } from '../domain/date';
 import { MAX_FOCUS, slotOf, type FocusEntry } from '../domain/focus';
@@ -469,19 +470,22 @@ export function StatsScreen(
                   <p>グラフを押すと、その日の値が出ます。</p>
                 </InfoButton>
               </span>
-              <label className="club-pick cmp-pick">
-                <i className="key" aria-hidden="true" />
-                <span className="sr">他クラブ（1人あたり）と比べる</span>
-                <select value={cmpPick} onChange={(e) => setCmp(e.target.value)} disabled={cmpClubs.length === 0}>
-                  <option value="">他クラブと比べる</option>
-                  <option value="avg">上位30平均 · 1人あたり</option>
-                  {cmpClubs.map((c) => (
-                    <option key={c.name} value={c.name}>
-                      {c.rank}位 {c.name} · 1人あたり
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <div className={`club-pick cmp-pick${cmpPick ? ' on' : ''}`}>
+                <Picker
+                  value={cmpPick}
+                  items={[
+                    { value: 'avg', label: '上位30平均' },
+                    ...cmpClubs.map((c) => ({ value: c.name, label: c.name, rank: c.rank })),
+                  ]}
+                  placeholder="他クラブと比べる"
+                  label="他クラブ（1人あたり）と比べる"
+                  caption={`1人あたり（クラブの累計 ÷ ${CLUB_CAPACITY}人）で比べる`}
+                  suffix=" · 1人あたり"
+                  lead={<i className="key" aria-hidden="true" />}
+                  disabled={cmpClubs.length === 0}
+                  onChange={setCmp}
+                />
+              </div>
             </div>
             <LineChart
               labels={axis.map(md)}

@@ -252,8 +252,15 @@ select.tin{background-image:linear-gradient(45deg,transparent 50%,var(--pk-ink) 
 .x{border:1.5px solid var(--pk-line)}
 .x::before,.x::after{background:var(--pk-ink)}
 .empty{border-color:var(--pk-line);background:var(--pk-tint)}
-.club-pick select{border:1.5px solid var(--pk-line);background-color:var(--face)}
-.cmp-pick select{border-color:var(--pk-line)}
+.pick-btn{border:1.5px solid var(--pk-line)}
+.pick-btn[aria-expanded="true"]{border-color:var(--pk)}
+.pick-cv{color:var(--pk-ink)}
+@media (hover:hover){.pick-btn:not(:disabled):not([aria-expanded="true"]):hover{border-color:var(--pk)}}
+.pick-pop{border:1.5px solid var(--pk-line)}
+.pick-cap{border-bottom-color:var(--pk-soft)}
+.pick-op.act{background:var(--pk-soft)}
+.pick-op[aria-selected="true"]{box-shadow:inset 3px 0 0 var(--pk)}
+.pick-op[aria-selected="true"] .pick-nm{color:var(--pk-ink)}
 .mtag{display:inline-block;font-family:var(--f-num);font-size:10px;font-weight:800;letter-spacing:.1em;line-height:1.5;padding:1px 7px;border:1.5px solid var(--pk-line);color:var(--pk-ink);background:var(--face)}
 
 /* ===== インフォメーションマーク（小さな説明はすべてここから開くモーダルへ） ===== */
@@ -269,7 +276,7 @@ select.tin{background-image:linear-gradient(45deg,transparent 50%,var(--pk-ink) 
 .gd-scroll h3 .info-btn{margin-left:-2px}
 .gd-head .acts .info-btn{margin-left:-3px}
 .info{display:grid;gap:12px}
-.cmp-pick:has(select:disabled) .key,.cmp-pick:not(:has(select option:checked:not([value=""]))) .key{opacity:.35}
+.cmp-pick:not(.on) .key{opacity:.35}
 .info p{margin:0;font-size:14px;line-height:1.8;color:var(--ink)}
 .info-dl{display:grid;gap:0;margin:0;border-top:1.5px solid var(--pk-soft)}
 .info-dl>div{display:grid;grid-template-columns:minmax(5.5em,auto) minmax(0,1fr);gap:4px 14px;padding:10px 0;border-bottom:1px solid var(--pk-soft)}
