@@ -1,7 +1,7 @@
 {
  "format": "kagaribi-club-ranking",
  "version": 1,
- "updatedAt": "2026-10-19T00:19:38.466Z",
+ "updatedAt": "2026-10-24T01:16:33.854Z",
  "rounds": [
   {"season": 31, "round": 1, "clubs": [
     {"rank":1,"prev":null,"name":"【γ】","total":56,"gain":56},
@@ -226,6 +226,38 @@
     {"rank":28,"prev":null,"name":"THE★進撃のゴリラ","total":222,"gain":null},
     {"rank":29,"prev":null,"name":"GOGOマフィン","total":220,"gain":null},
     {"rank":30,"prev":26,"name":"最終兵器りんごちゃん","total":218,"gain":19}
+  ]},
+  {"season": 31, "round": 8, "clubs": [
+    {"rank":1,"prev":7,"name":"【γ】","total":326,"gain":49},
+    {"rank":2,"prev":1,"name":"ぼっちの会","total":325,"gain":36},
+    {"rank":3,"prev":8,"name":"SHIELDS","total":324,"gain":52},
+    {"rank":4,"prev":3,"name":"SB from リンプして時雨","total":319,"gain":36},
+    {"rank":5,"prev":1,"name":"Accentier","total":314,"gain":25},
+    {"rank":6,"prev":6,"name":"燎","total":313,"gain":34},
+    {"rank":7,"prev":3,"name":"Mix-Excellent","total":311,"gain":28},
+    {"rank":7,"prev":5,"name":"Confidence man","total":311,"gain":29},
+    {"rank":9,"prev":11,"name":"シニチロー門","total":309,"gain":47},
+    {"rank":10,"prev":10,"name":"#41","total":307,"gain":41},
+    {"rank":11,"prev":8,"name":"ルイーダの酒場","total":304,"gain":32},
+    {"rank":11,"prev":14,"name":"明日の事はサイコロで決める会","total":304,"gain":45},
+    {"rank":13,"prev":22,"name":"Famous Day","total":300,"gain":58},
+    {"rank":14,"prev":17,"name":"すとろべりー☆てぃると","total":298,"gain":46},
+    {"rank":15,"prev":12,"name":"Azul Ardiente","total":292,"gain":31},
+    {"rank":16,"prev":16,"name":"日本Poker研究所(JPL)","total":289,"gain":35},
+    {"rank":17,"prev":23,"name":"SANG-FROID","total":286,"gain":46},
+    {"rank":17,"prev":17,"name":"ぶちまろふぁんくらぶ","total":286,"gain":34},
+    {"rank":19,"prev":17,"name":"33−4","total":284,"gain":32},
+    {"rank":19,"prev":13,"name":"ポーカー攻略部","total":284,"gain":24},
+    {"rank":21,"prev":21,"name":"Black Box","total":283,"gain":40},
+    {"rank":22,"prev":15,"name":"Close it にーなな★","total":278,"gain":23},
+    {"rank":23,"prev":20,"name":"髭 HOUSE","total":276,"gain":28},
+    {"rank":24,"prev":24,"name":"☆One Top☆","total":274,"gain":37},
+    {"rank":25,"prev":25,"name":"あるてぃめっと！","total":266,"gain":39},
+    {"rank":26,"prev":25,"name":"ポカたまですこ","total":264,"gain":37},
+    {"rank":27,"prev":null,"name":"ポーカーギルド","total":259,"gain":null},
+    {"rank":28,"prev":28,"name":"THE★進撃のゴリラ","total":257,"gain":35},
+    {"rank":29,"prev":27,"name":"青雪隊","total":249,"gain":23},
+    {"rank":30,"prev":null,"name":"New Genius","total":247,"gain":null}
   ]}
  ]
 }
