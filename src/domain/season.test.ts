@@ -29,11 +29,14 @@ describe('既定のシーズン（暦月）', () => {
     expect(seasonOf('2026-09-30', [])).toBeNull();
   });
 
-  it('S31 の開催日は火・木・土の 13 日', () => {
+  it('S31 の開催日は火・木・土から公式の休催日（10/22）を除いた 12 日', () => {
     const days = matchDays(31, []);
-    expect(days).toHaveLength(13);
+    expect(days).toHaveLength(12);
     expect(days[0]).toBe('2026-10-03');
+    expect(days).not.toContain('2026-10-22');
+    expect(days[9]).toBe('2026-10-27'); // 第10節
     expect(days.at(-1)).toBe('2026-10-31');
+    expect(isMatchDay('2026-10-22', [])).toBe(false);
   });
 });
 
@@ -41,7 +44,7 @@ describe('シーズンの手動修正', () => {
   it('終了を 1 日早めると、その日はどのシーズンにも入らない', () => {
     const ov = [{ no: 31, start: '2026-10-03', end: '2026-10-30', toggled: [] }];
     expect(seasonOf('2026-10-31', ov)).toBeNull();
-    expect(matchDays(31, ov)).toHaveLength(12);
+    expect(matchDays(31, ov)).toHaveLength(11);
   });
 
   it('翌月にずれ込んだ期間も拾う', () => {

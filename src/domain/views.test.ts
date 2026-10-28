@@ -33,7 +33,7 @@ describe('シーズンの表', () => {
   it('開催日以外の記録日も X 軸に入る', () => {
     const axis = seasonAxis(data, 31);
     expect(axis).toContain('2026-10-07');
-    expect(axis).toHaveLength(14);
+    expect(axis).toHaveLength(13); // 開催日 12 日（10/22 は休催）+ 10/7
   });
 
   it('累積は今日で止まる', () => {
