@@ -3,6 +3,7 @@
  *
  * 公式シーズンはほぼ「月初の開催日〜月末」なので、既定は暦月で自動判定する
  * （S31 = 2026年10月、以降 1 か月ごとに +1。S31 だけ公式の開始日 10/3 から）。
+ * 開催日は火・木・土。公式に休催だった日は OFFICIAL_CLOSED_DAYS で既定から外す。
  * 急な短縮・延長・休催があったときのために、シーズンごとに期間と開催日を手動で直せる
  * （SeasonOverride）。直した期間はその前後のシーズンと重ならないことを検証する。
  */
@@ -16,6 +17,8 @@ export const FIRST_SEASON_START = '2026-10-03';
 const FIRST_MONTH = 2026 * 12 + 9;
 /** 開催曜日（火・木・土）。 */
 export const MATCH_WEEKDAYS: readonly number[] = [2, 4, 6];
+/** 火・木・土でも公式に開催しなかった日（S31: 10/22）。第N節が N 番目の開催日になるように既定から外す。 */
+export const OFFICIAL_CLOSED_DAYS: readonly string[] = ['2026-10-22'];
 
 export interface SeasonRange {
   no: number;
@@ -58,9 +61,9 @@ export function seasonOf(date: string, overrides: readonly SeasonOverride[]): nu
   return null;
 }
 
-/** 既定で開催日か（火・木・土）。 */
+/** 既定で開催日か（火・木・土。公式の休催日を除く）。 */
 export function isDefaultMatchDay(date: string): boolean {
-  return MATCH_WEEKDAYS.includes(weekdayOf(date));
+  return MATCH_WEEKDAYS.includes(weekdayOf(date)) && !OFFICIAL_CLOSED_DAYS.includes(date);
 }
 
 /** シーズンの開催日（期間内の火・木・土に、手動の休催／追加開催を反映）。 */
